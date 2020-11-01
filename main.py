@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import signal
 import sys
 import platform
@@ -14,9 +15,10 @@ scrape_parser = subparsers.add_parser('scrape', help="Command to scrape", usage=
 The following arguments are required:
 -m / --marketplace      [REQUIRED] the marketplace
 -q / --query            [REQUIRED] keyword for search
--sp / --startpage      [REQUIRED] start scraping from this page number
--ep / --end-page        [REQUIRED] scrape until this page number
+-sp / --startpage       [REQUIRED] start scraping from this page number
+-ep / --endpage         [REQUIRED] scrape until this page number
 -r / --result           [REQUIRED] the file format for the results
+-f / --filename         [OPTIONAL] the name of the final output
 
 """)
 scrape_parser.add_argument('-m',
@@ -42,7 +44,7 @@ scrape_parser.add_argument('-sp',
                            default=1)
 
 scrape_parser.add_argument('-ep',
-                           '--end-page',
+                           '--endpage',
                            help='[REQUIRED] scrape until this page number',
                            metavar='',
                            type=int,
@@ -54,6 +56,13 @@ scrape_parser.add_argument('-r',
                            metavar='',
                            type=str,
                            required=True)
+
+scrape_parser.add_argument('-f',
+                           '--filename',
+                           help='[OPTIONAL] the name of the final output',
+                           type=str,
+                           metavar='',
+                           required=False)
 
 load_parser = subparsers.add_parser('load', help="Command to load from file or retry errors", usage="""
 
@@ -80,7 +89,7 @@ continue_parser = subparsers.add_parser('continue', help="Command to continue sc
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the file
 -sp / --startpage      [REQUIRED] start scraping from this page number
--ep / --end-page        [REQUIRED] scrape until this page number
+-ep / --endpage        [REQUIRED] scrape until this page number
 -r / --result           [REQUIRED] the file format for the results
 
 """)
@@ -100,7 +109,7 @@ continue_parser.add_argument('-sp',
                              default=1)
 
 continue_parser.add_argument('-ep',
-                             '--end-page',
+                             '--endpage',
                              help='[REQUIRED] scrape until this page number',
                              metavar='',
                              type=int,
@@ -114,14 +123,24 @@ continue_parser.add_argument('-r',
                              required=True)
 
 
-
-class Main():
+class Main:
     operating_system = platform.system()
     original_sigint = signal.getsignal(signal.SIGINT)
 
     def __init__(self, arguments):
         arguments.query = self.fix_key_word(arguments.query)
         self.args = vars(arguments)
+        self.check_name()
+
+    def check_name(self):
+        query = r"^[ .]|[/<>:\"\\|?*]+|[ .]$"
+        illegal_char = re.findall(query, self.args['filename'])
+        if len(illegal_char) == 0:
+            return
+        else:
+            print(f"filename contains illegal characters:\n {illegal_char}\n replacing with \"_\"")
+            self.args['filename'] = re.sub(query, "", self.args['filename'])
+
 
     def clear_console(self):
         if str(self.operating_system) == 'Windows':
@@ -148,33 +167,31 @@ class Main():
 
     def main(self):
         self.clear_console()
-        print(self.args)
-        if self.args.command == 'scrape':
+        if self.args['command'] == 'scrape':
             # scrape
-            if self.args.marketplace.lower() == 'tokopedia':
-                self.process = Tokopedia.__init__(self.args)
+            if self.args['marketplace'].lower() == 'tokopedia':
+                self.process = Tokopedia.Tokopedia(self.args)
                 self.process.start_scrape()
 
-            elif self.args.marketplace.lower() == 'bukalapak':
-                self.process = Bukalapak.__init__(self.args)
+            elif self.args['marketplace'].lower() == 'bukalapak':
+                self.process = Bukalapak.Bukalapak(self.args)
                 self.process.start_scrape()
 
-            elif self.args.marketplace.lower() == 'shopee':
-                self.process = Shopee.__init__(self.args)
+            elif self.args['marketplace'].lower() == 'shopee':
+                self.process = Shopee.Shopee(self.args)
                 self.process.start_scrape()
 
-        # elif self.command == 'continue':
-        #     #continue
-        #
-        # elif self.command == 'load':
-        #     #load
-        # else:
-        #     sys.exit(1)
+        elif self.command == 'continue':
+            #continue
+
+        elif self.command == 'load':
+            #load
+        else:
+            sys.exit(1)
 
 
 try:
     args = parser.parse_args()
-    print(vars(args))
 except TypeError as err:
     parser.print_help()
     exit()

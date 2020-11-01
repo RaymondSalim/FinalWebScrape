@@ -12,6 +12,9 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 class Bukalapak:
     operating_system = platform.system()
+    NEXT_PAGE_DEAD = 0
+    NEXT_PAGE_EXISTS = 1
+
 
     def __init__(self, args):
         self.args = args
@@ -48,16 +51,32 @@ class Bukalapak:
             os.system('clear')
 
     def start_scrape(self):
+        print("Start")
+        self.start_time = datetime.now()
+
         start_page = self.args['startpage'] or 1
 
-        url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args.query}"
+        url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args['query']}"
 
         driver = self.start_driver()
 
         driver.get(url)
 
-        while start_page <= self.args.endpage:
+        while start_page <= self.args['endpage']:
             urls = self.get_urls_from_search_results(driver, start_page)
+            self.scrape_from_url_list(driver, urls)
+
+            has_next = self.next_search_page
+            if has_next == self.NEXT_PAGE_EXISTS:
+                start_page += 1
+            elif has_next == self.NEXT_PAGE_DEAD:
+                break
+
+        self.handle_data
+
+            
+
+
 
     def get_urls_from_search_results(self, driver: WebDriver, start_page) -> List[str]:
         try:
@@ -67,16 +86,14 @@ class Bukalapak:
         except NoSuchElementException:
             pass
 
-
-
         finally:
             try:
                 self.wait.until(
                     ec.presence_of_element_located((By.XPATH, '//div[@class="bl-product-card__thumbnail"]//*//a')),
                     "No items found on this page")
+
             except:
                 return []
-
 
             else:
                 print(f"Page {start_page}")
@@ -93,7 +110,7 @@ class Bukalapak:
 
                 return list_of_url
 
-    def scrape_url_list(self, driver: WebDriver, urls: List[str]):
+    def scrape_from_url_list(self, driver: WebDriver, urls: List[str]):
         for product in urls:
             # Opens a new tab
             driver.execute_script("window.open('');")
@@ -131,10 +148,9 @@ class Bukalapak:
             """
 
             try:
-                driver.implicitly_wait(0)
                 d = dict()
 
-                d['KEYWORD'] = self.args.query
+                d['KEYWORD'] = self.args['query']
 
                 d['PRODUK'] = ""
                 d['FARMASI'] = ""
@@ -211,5 +227,31 @@ class Bukalapak:
                 self.data.append(d)
                 self.scraped_count += 1
                 print(f"    Item #{self.scraped_count} completed")
+
+    def next_search_page(self, driver: WebDriver) -> int:
+        try:
+            next_button = driver.find_element_by_css_selector("a[class*='pagination__next']")
+
+            if next_button.is_enabled():
+                print("Next page")
+                next_button.click()
+                return self.NEXT_PAGE_EXISTS
+            else:
+                return self.NEXT_PAGE_DEAD
+
+        except TimeoutException as err:
+            print(err)
+            return self.NEXT_PAGE_DEAD
+
+        except NoSuchElementException as err:
+            return self.NEXT_PAGE_DEAD
+
+    def handle_data(self):
+        print("Time taken: " + str(datetime.now() - self.start_time))
+
+        if self.args['command'] == "scrape":
+            file_name = self.args['filename']
+
+
 
 
