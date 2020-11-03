@@ -246,3 +246,5 @@ dmypy.json
 .prof
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,python
+/Output/
+cd.zip
