@@ -6,10 +6,10 @@ import sys
 import platform
 from datetime import datetime
 from urllib import parse
-from WebScrape import status_codes as sc
-from WebScrape import load_from_file as lff
-from WebScrape import shopee, tokopedia, bukalapak
-from WebScrape.handle_result import HandleResult
+from webscrape_files import status_codes as sc
+from webscrape_files import load_from_file as lff
+from webscrape_files import shopee, tokopedia, bukalapak
+from webscrape_files.handle_result import HandleResult
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(required=True, dest='command')
@@ -75,7 +75,7 @@ scrape_parser.add_argument('-f',
 retry_parser = subparsers.add_parser('retry', help="Command to retry errors from xxx_errors.json", usage="""
 
 The following arguments are required:
--f / --filename         [REQUIRED] name of the file
+-f / --filename         [REQUIRED] name of the file containing the errors
 -r / --result           [REQUIRED] the file format for the results {csv, json}
 
 """)
@@ -110,7 +110,7 @@ convert_parser.add_argument('-f',
 continue_parser = subparsers.add_parser('continue', help="Command to continue scraping", usage="""
 
 The following arguments are required:
--f / --filename         [REQUIRED] name of the file
+-f / --filename         [REQUIRED] name of the incomplete job file
 -sp / --startpage       [OPTIONAL] (DEFAULT = 1) start scraping from this page number
 -ep / --endpage         [REQUIRED] scrape until this page number
 -r / --result           [REQUIRED] the file format for the results {csv, json}

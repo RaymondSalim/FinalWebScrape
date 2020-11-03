@@ -20,10 +20,10 @@ class HandleResult:
         self.output_dir = str(os.path.dirname(os.path.realpath(__file__)))
 
         if str(operating_system) == 'Linux':
-            self.output_dir = self.output_dir.replace('/WebScrape', '/Output/')
+            self.output_dir = self.output_dir.replace('/webscrape_files', '/Output/')
 
         elif str(operating_system) == 'Windows':
-            self.output_dir = self.output_dir.replace('\\WebScrape', '\\Output\\')
+            self.output_dir = self.output_dir.replace('\\webscrape_files', '\\Output\\')
 
         if not os.path.exists(os.path.normpath(self.output_dir)):
             os.mkdir(os.path.normpath(self.output_dir))

@@ -4,7 +4,7 @@ import re
 from typing import List
 from datetime import datetime
 from selenium import webdriver
-from WebScrape.handle_result import HandleResult
+from webscrape_files.handle_result import HandleResult
 from . import city_list as cl
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -13,11 +13,11 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 
-class Shopee:
+class Tokopedia:
     operating_system = platform.system()
     NEXT_PAGE_DEAD = 0
     NEXT_PAGE_EXISTS = 1
-    ID = "shopee"
+    ID = "tokopedia"
     timeout_limit = 10
 
     def __init__(self, args):
@@ -28,9 +28,9 @@ class Shopee:
         self.driver_dir = str(os.path.dirname(os.path.realpath(__file__)))
 
         if str(self.operating_system) == 'Linux':
-            self.driver_dir = self.driver_dir.replace('/WebScrape', '/Files/chromedriver')
+            self.driver_dir = self.driver_dir.replace('/webscrape_files', '/Files/chromedriver')
         elif str(self.operating_system) == 'Windows':
-            self.driver_dir = self.driver_dir.replace('\\WebScrape', '\\Files\\chromedriver.exe')
+            self.driver_dir = self.driver_dir.replace('\\webscrape_files', '\\Files\\chromedriver.exe')
 
     def start_driver(self) -> webdriver:
         chrome_options = webdriver.ChromeOptions()
@@ -62,7 +62,7 @@ class Shopee:
         start_page = self.args['startpage'] or 1
         self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
 
-        url = f"https://shopee.co.id/search?page={start_page-1}&keyword={self.args['query_parsed']}"
+        url = f"https://www.tokopedia.com/search?page={start_page}&q={self.args['query_parsed']}"
 
         try:
             driver = self.start_driver()
@@ -96,7 +96,7 @@ class Shopee:
 
         driver = self.start_driver()
 
-        url = f"https://shopee.co.id/search?page={start_page-1}&keyword={self.args['query_parsed']}"
+        url = f"https://www.tokopedia.com/search?page={start_page}&q={self.args['query_parsed']}"
 
         driver.get(url)
 
@@ -130,40 +130,30 @@ class Shopee:
 
     def get_urls_from_search_results(self, driver: WebDriver, start_page) -> List[str]:
         try:
-            has_results = driver.find_element_by_css_selector('div[class="shopee-search-result-header__text"]').text
-            if "Kami tidak dapat menemukan" in has_results:
+            has_results = driver.find_element_by_css_selector('button[data-testid="btnSRPChangeKeyword"]').text
+            if "Ganti kata kunci" in has_results:
                 print("Tidak ada hasil")
                 return []
         except NoSuchElementException:
             pass
 
         finally:
-            try:
-                self.wait.until(ec.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
-            except:
-                return []
+            print(f"Page {start_page}")
+            search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
+            products = search_results.find_elements_by_class_name('pcv3__info-content')
+            list_of_url = []
 
-            else:
-                print(f"Page {start_page}")
-                search_results = driver.find_element_by_css_selector(
-                    'div[class="row shopee-search-item-result__items"]')
-                products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+            for product in products:
+                try:
+                    product_url = product.get_attribute('href')
+                    list_of_url.append(product_url)
+                except Exception as err:
+                    print(f"Error in def get_urls_from_search_results\n{err}")
 
-                list_of_url = []
-
-                for product in products:
-                    try:
-                        product_url = product.find_element_by_tag_name('a').get_attribute('href')
-                        list_of_url.append(product_url)
-                    except Exception as err:
-                        print(f"Error in def get_urls_from_search_results\n{err}")
-
-                return list_of_url
+            return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
-
             if any(completed in product for completed in completed_url):
                 print("Item skipped")
                 continue
@@ -187,17 +177,27 @@ class Shopee:
 
     def scrape_product_page(self, driver: WebDriver):
         try:
-            self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div.page-product'), ""),
-                            "Page product not found")
-            self.wait.until(ec.text_to_be_present_in_element((By.CLASS_NAME, 'qaNIZv'), ""))
+            self.wait.until_not(ec.url_contains("ta.tokopedia"))
 
         except Exception as err:
             print(err)
             self.errors.append(driver.current_url)
             return
 
+        try:
+            self.wait.until(
+                ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div[data-testid="pdpDescriptionContainer"]'), ""),
+                "pdpDescriptionContainer not found")
+        except Exception as err:
+            print(err)
+            print("timed out, skipping")
+            self.errors.append(driver.current_url)
+            return
+
         else:
-            is_page_valid = driver.find_elements_by_css_selector('div[class="product-not-exist__content"]')
+            is_page_valid = driver.find_elements_by_css_selector(
+                'h1[class="css-6hac5w-unf-heading e1qvo2ff1"]')  # Required to check if product page is valid
+
             if len(is_page_valid) > 0:
                 return
 
@@ -206,6 +206,7 @@ class Shopee:
             """
 
             try:
+                driver.implicitly_wait(0)
                 d = dict()
 
                 d['KEYWORD'] = self.args['query']
@@ -213,14 +214,14 @@ class Shopee:
 
                 d['PRODUK'] = ""
                 d['FARMASI'] = ""
-                d['E-COMMERCE'] = 'SHOPEE'
+                d['E-COMMERCE'] = 'TOKOPEDIA'
 
-                self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3Lybjn'), ""))
-                d['TOKO'] = driver.find_element_by_css_selector('div._3Lybjn').text
+                self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'a[data-testid="llbPDPFooterShopName"]'), ""))
+                d['TOKO'] = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text
+                driver.implicitly_wait(0)
 
-                location = driver.find_elements_by_css_selector('div[class="kIo6pj"]')[-1].text
-                location = location.replace("Dikirim Dari",
-                                            "") if "Dikirim Dari" in location else "International"
+                location = driver.find_element_by_css_selector('span[data-testid="lblPDPFooterLastOnline"]').text
+                location = location.split('•')[0]
                 d['ALAMAT'] = location
 
                 kota = None
@@ -236,114 +237,94 @@ class Shopee:
                             kota = regency
                             break
 
-                d['KOTA'] =kota or ""
+                d['KOTA'] = kota or ""
 
-                self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="qaNIZv"]')))
-                nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
-
-
+                nama_produk = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text
 
                 box_patt = r"(?i)((?:[0-9,]{1,6}[ ]?(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)))|(?:(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)(?:[ ]?[0-9.,]{1,6}))"
                 rbox = re.findall(box_patt, nama_produk)
 
                 d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""
 
-                range_container = driver.find_element_by_css_selector('div[class="flex _3dRJGI _3a2wD-"]')
-                indiv_container = range_container.find_elements_by_css_selector('div[class="flex items-center"]')
+                range_data = []
+                ignored_containers = ['HARGA', 'JUMLAH', 'PROMO', 'INFO PRODUK', 'ONGKOS KIRIM']
+                range_containers = driver.find_elements_by_css_selector('div[class="css-eyzclq"]')
+                for i in range(0, len(range_containers)):
+                    range_title = range_containers[i].find_elements_by_css_selector('p[class="css-1k51u5l-unf-heading e1qvo2ff8"]')
+                    if len(range_title) > 0:
+                        if range_title[0].text in ignored_containers:
+                            # if any(ignored.casefold() in )
+                            continue
+                        else:
+                            title = range_title[0].text
+                            range_options = driver.find_elements_by_css_selector('div[data-testid="lblPDPProductVariantukuran"]')
+                            ranges = [a.text for a in range_options]
+                            range_final = title + ': ' + ', '.join(ranges)
+                            range_data.append(range_final)
+                d['RANGE'] = '; '.join(range_data)
 
-                all_options = []
+                sold_count_valid = driver.find_elements_by_css_selector(
+                    'span[data-testid="lblPDPDetailProductSuccessRate"]')
+                sold_count = sold_count_valid[0].text if len(sold_count_valid) > 0 else ""
+                sold_count = sold_count[8:len(sold_count) - 7:].replace(',','').replace('.', '')
+                if "rb" in sold_count:
+                    sold_count = sold_count.replace('rb', '')
+                    sold_count = int(sold_count) * 100
+                d['JUAL (UNIT TERKECIL)'] = int(sold_count) if len(sold_count_valid) > 0 else ""
 
-                for i in range(0, len(indiv_container) - 1):
-                    indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_2iNrDS"]').text
-                    indiv_container_options = indiv_container[i].find_element_by_css_selector('div[class="flex items-center crl7WW"]')
-                    options = indiv_container_options.find_elements_by_css_selector('button[class*="product-variation"]')
-                    textoptions = [a.text for a in options]
-                    text = indiv_container_title + ': ' + ', '.join(textoptions)
-                    all_options.append(text)
-
-                d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
-
-                sold_count_val = driver.find_elements_by_css_selector('div[class="_22sp0A"]')
-                if len(sold_count_val) > 0:
-                    sol = sold_count_val[0].text
-                    if 'RB' in sol:
-                        sol = sol.replace('RB', '').replace(',', '').replace('+', '')
-                        sol = int(sol) * 100
-                    d['JUAL (UNIT TERKECIL)'] = int(sol)
-
-                else:
-                    d['JUAL (UNIT TERKECIL)'] = ""
-
-
-                disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
-                if len(disc) > 0:
-                    disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
-                    disc = float(disc_float) / 100
-                else:
-                    disc = ""
-
-                prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
-                if len(prices) > 0:
-                    prices = prices[0].text.split()
-                else:
-                    prices = (driver.find_element_by_css_selector('div[class="_3n5NQx"]').text.split())
-                prices = [val.replace('.', '').replace('Rp', '') for val in prices]
-                try:
-                    prices.remove('-')
-                except ValueError:
-                    pass
-
-                if len(prices) == 1:
-                    d['HARGA UNIT TERKECIL'] = int(prices[0])
-                else:
-                    d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
+                price = driver.find_element_by_css_selector('h3[data-testid="lblPDPDetailProductPrice"]').text
+                d['HARGA UNIT TERKECIL'] = int((price[2::]).replace(".", ""))
 
                 d['VALUE'] = ""
 
-                d['% DISC'] = disc
+                discount = driver.find_elements_by_css_selector('div[data-testid="lblPDPDetailDiscountPercentage"]')
+                d['% DISC'] = float(discount[0].text.replace('%',''))/100 if len(discount) > 0 else ""
 
-                shop_cat = driver.find_elements_by_css_selector('div[class="_1oAxCI"]')
-                if len(shop_cat) > 0:
-                    cat = shop_cat[0].text
-                    if "Star".casefold() in cat.casefold():
-                        cat = "STAR SELLER"
-                    elif "".casefold() == cat.casefold():
+                shop_category = driver.find_elements_by_css_selector('p[data-testid="imgPDPDetailShopBadge"]')
+                if len(shop_category) > 0:
+                    shop_category = shop_category[0].text
+                    if shop_category.casefold() == "Official Store".casefold():
                         cat = "OFFICIAL STORE"
+                    elif shop_category.casefold() == "Power Merchant".casefold():
+                        cat = "STAR SELLER"
+                    elif shop_category.casefold() == "".casefold():
+                        cat = "TOKO BIASA"
+                    else:
+                        cat = "TOKO BIASA"
                 else:
                     cat = "TOKO BIASA"
                 d['KATEGORI'] = cat
-
 
                 url = driver.current_url
                 if '?' in url:
                     url = url[:str(driver.current_url).index('?')]
                 d['SOURCE'] = url
 
-                if nama_produk.startswith('Star+'):
-                    nama_produk = nama_produk[6::]
-                elif nama_produk.startswith('Star'):
-                    nama_produk = nama_produk[5::]
-
                 d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
-                rating_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n _2z6cUg"]')
-                d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text) * 20 if len(
-                    rating_val) > 0 else ""
+                rating = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductRatingNumber"]')
+                d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text)*20 if len(rating) > 0 else ""
 
-                rating_count_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n"]')
-                if len(rating_count_val) > 0:
-                    rat = rating_count_val[0].text
-                    if 'RB' in rat:
-                        rat = rat.replace('RB', '').replace(',', '').replace('+', '')
-                        rat = int(rat) * 1000
-                    d['JML ULASAN'] = int(rat)
+                rating_total = driver.find_elements_by_css_selector(
+                    'span[data-testid="lblPDPDetailProductRatingCounter"]')
+                rating_total = rating_total[0].text.replace('(','').replace(')', '').replace(',','').replace('.', '') if len(rating_total) > 0 else ""
+                if "rb" in rating_total:
+                    rating_total = rating_total.replace('rb','')
+                    rating_total = int(rating_total) * 100
 
-                else:
-                    d['JML ULASAN'] = ""
+                d['JML ULASAN'] = int(rating_total) if len(rating_total) > 0 else ""
 
-                d['DILIHAT'] = ""
+                seen_by = (
+                    driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductSeenCounter"]'))
+                seen_by = seen_by[0].text[:seen_by[0].text.index("x"):].replace('(','').replace(')', '').replace(',','').replace('.', '')
+                if "rb" in seen_by:
+                    seen_by = seen_by.replace('rb', '')
+                    seen_by = int(seen_by) * 100
 
-                d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_2u0jt9"]').text
+                d['DILIHAT'] = int(seen_by)
+
+                d['DESKRIPSI'] = driver.find_element_by_css_selector(
+                    'div[data-testid="pdpDescriptionContainer"]').text
 
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -359,15 +340,15 @@ class Shopee:
     def next_search_page(self, driver: WebDriver) -> int:
         try:
             driver.implicitly_wait(3)
-            next_button = driver.find_element_by_css_selector(
-                'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')
+            next_button = driver.find_element_by_css_selector('button[aria-label="Halaman berikutnya"]')
 
             if next_button.is_enabled():
                 print("Next page")
                 next_button.click()
-                self.wait.until(ec.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'div.shopee-search-item-result__item')),
-                    f'Items not found in this page')
+
+                self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'pcv3__info-content')),
+                                'Items not found in this page')
+
                 return self.NEXT_PAGE_EXISTS
             else:
                 return self.NEXT_PAGE_DEAD

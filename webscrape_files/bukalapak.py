@@ -4,7 +4,7 @@ import re
 from typing import List
 from datetime import datetime
 from selenium import webdriver
-from WebScrape.handle_result import HandleResult
+from webscrape_files.handle_result import HandleResult
 from . import city_list as cl
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -28,9 +28,9 @@ class Bukalapak:
         self.driver_dir = str(os.path.dirname(os.path.realpath(__file__)))
 
         if str(self.operating_system) == 'Linux':
-            self.driver_dir = self.driver_dir.replace('/WebScrape', '/Files/chromedriver')
+            self.driver_dir = self.driver_dir.replace('/webscrape_files', '/Files/chromedriver')
         elif str(self.operating_system) == 'Windows':
-            self.driver_dir = self.driver_dir.replace('\\WebScrape', '\\Files\\chromedriver.exe')
+            self.driver_dir = self.driver_dir.replace('\\webscrape_files', '\\Files\\chromedriver.exe')
 
     def start_driver(self) -> webdriver:
         chrome_options = webdriver.ChromeOptions()

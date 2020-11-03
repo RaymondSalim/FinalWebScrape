@@ -1,7 +1,7 @@
 import csv
 import json
 
-from WebScrape import shopee, tokopedia, bukalapak, handle_result
+from webscrape_files import shopee, tokopedia, bukalapak, handle_result
 
 class LoadFromFile:
     def __init__(self, args, path=None):
