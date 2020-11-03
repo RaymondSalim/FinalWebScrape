@@ -4,8 +4,12 @@ import re
 import signal
 import sys
 import platform
+from datetime import datetime
 from urllib import parse
-from WebScrape import Shopee, Tokopedia, Bukalapak
+from WebScrape import status_codes as sc
+from WebScrape import load_from_file as lff
+from WebScrape import shopee, tokopedia, bukalapak
+from WebScrape.handle_result import HandleResult
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(required=True, dest='command')
@@ -13,11 +17,11 @@ subparsers = parser.add_subparsers(required=True, dest='command')
 scrape_parser = subparsers.add_parser('scrape', help="Command to scrape", usage="""
 
 The following arguments are required:
--m / --marketplace      [REQUIRED] the marketplace
+-m / --marketplace      [REQUIRED] the marketplace {tokopedia, bukalapak, shopee}
 -q / --query            [REQUIRED] keyword for search
--sp / --startpage       [REQUIRED] start scraping from this page number
--ep / --endpage         [REQUIRED] scrape until this page number
--r / --result           [REQUIRED] the file format for the results
+-sp / --startpage       [OPTIONAL] (DEFAULT = 1) start scraping from this page number
+-ep / --endpage         [REQUIRED] (0 TO SCRAPE ALL PAGES) scrape until this page number
+-r / --result           [REQUIRED] the file format for the results {csv, json}
 -f / --filename         [OPTIONAL] the name of the final output
 
 """)
@@ -25,7 +29,8 @@ scrape_parser.add_argument('-m',
                            '--marketplace',
                            help='[REQUIRED] the marketplace',
                            metavar='',
-                           type=str,
+                           type=str.lower,
+                           choices=['tokopedia', 'bukalapak', 'shopee'],
                            required=True)
 
 scrape_parser.add_argument('-q',
@@ -37,7 +42,7 @@ scrape_parser.add_argument('-q',
 
 scrape_parser.add_argument('-sp',
                            '--startpage',
-                           help='[OPTIONAL] start scraping from this page number (Default is 1)',
+                           help='[OPTIONAL] (DEFAULT = 1) start scraping from this page number',
                            metavar='',
                            type=int,
                            required=False,
@@ -54,43 +59,61 @@ scrape_parser.add_argument('-r',
                            '--result',
                            help='[REQUIRED] the file format for the results',
                            metavar='',
-                           type=str,
-                           required=True)
+                           type=str.lower,
+                           required=True,
+                           choices=['csv', 'json']
+                           )
 
 scrape_parser.add_argument('-f',
                            '--filename',
                            help='[OPTIONAL] the name of the final output',
                            type=str,
                            metavar='',
+                           default='',
                            required=False)
 
-load_parser = subparsers.add_parser('load', help="Command to load from file or retry errors", usage="""
+retry_parser = subparsers.add_parser('retry', help="Command to retry errors from xxx_errors.json", usage="""
 
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the file
--r / --result           [REQUIRED] the file format for the results
+-r / --result           [REQUIRED] the file format for the results {csv, json}
 
 """)
-load_parser.add_argument('-f',
+retry_parser.add_argument('-f',
+                         '--filename',
+                          help='[REQUIRED] name of the file',
+                          type=str,
+                          metavar='',
+                          required=True)
+retry_parser.add_argument('-r',
+                         '--result',
+                          help='[REQUIRED] the file format for the results',
+                          metavar='',
+                          type=str.lower,
+                          required=True,
+                          choices=['csv', 'json']
+                          )
+
+convert_parser = subparsers.add_parser('convert', help="Command to convert from/to csv/json", usage="""
+
+The following arguments are required:
+-f / --filename         [REQUIRED] name of the file
+
+""")
+convert_parser.add_argument('-f',
                          '--filename',
                          help='[REQUIRED] name of the file',
                          type=str,
                          metavar='',
-                         required=True)
-load_parser.add_argument('-r',
-                         '--result',
-                         help='[REQUIRED] the file format for the results',
-                         metavar='',
-                         type=str,
                          required=True)
 
 continue_parser = subparsers.add_parser('continue', help="Command to continue scraping", usage="""
 
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the file
--sp / --startpage      [REQUIRED] start scraping from this page number
--ep / --endpage        [REQUIRED] scrape until this page number
--r / --result           [REQUIRED] the file format for the results
+-sp / --startpage       [OPTIONAL] (DEFAULT = 1) start scraping from this page number
+-ep / --endpage         [REQUIRED] scrape until this page number
+-r / --result           [REQUIRED] the file format for the results {csv, json}
 
 """)
 continue_parser.add_argument('-f',
@@ -102,7 +125,7 @@ continue_parser.add_argument('-f',
 
 continue_parser.add_argument('-sp',
                              '--startpage',
-                             help='[OPTIONAL] start scraping from this page number (Default is 1)',
+                             help='[OPTIONAL] (DEFAULT = 1) start scraping from this page number',
                              metavar='',
                              type=int,
                              required=False,
@@ -119,8 +142,14 @@ continue_parser.add_argument('-r',
                              '--result',
                              help='[REQUIRED] the file format for the results',
                              metavar='',
-                             type=str,
-                             required=True)
+                             type=str.lower,
+                             required=True,
+                             choices=['csv', 'json']
+                             )
+
+current_path = str(os.path.dirname(os.path.realpath(__file__)))
+
+
 
 
 class Main:
@@ -128,9 +157,23 @@ class Main:
     original_sigint = signal.getsignal(signal.SIGINT)
 
     def __init__(self, arguments):
-        arguments.query = self.fix_key_word(arguments.query)
         self.args = vars(arguments)
-        self.check_name()
+        self.check_args()
+
+    def get_output_path(self):
+        if str(self.operating_system) == 'Windows':
+            return current_path + '\\Output\\' + self.args['filename']
+        else:
+            return current_path + '/Output/' + self.args['filename']
+
+    def check_args(self):
+        arguments = self.args.keys()
+
+        if "filename" in arguments:
+            self.check_name()
+
+        if "query" in arguments:
+            self.fix_key_word()
 
     def check_name(self):
         query = r"^[ .]|[/<>:\"\\|?*]+|[ .]$"
@@ -141,53 +184,67 @@ class Main:
             print(f"filename contains illegal characters:\n {illegal_char}\n replacing with \"_\"")
             self.args['filename'] = re.sub(query, "", self.args['filename'])
 
-
     def clear_console(self):
         if str(self.operating_system) == 'Windows':
             os.system('cls')
         else:
             os.system('clear')
 
-    def fix_key_word(self, keyword):
+    def fix_key_word(self):
         # Replaces any characters to HTML Charset
-        return parse.quote(keyword)
+        self.args['query_parsed'] = parse.quote(self.args['query'])
 
     def handle_sigint(self, signum, frame):
-        signal.signal(signal.SIGINT, self.original_sigint)
+        data = self.process.data
+        errors = self.process.errors
+        if len(data) > 0:
+            if not "filename" in self.args.keys():
+                # Filename argument is not specified, so filename will be generated
+                self.args['filename'] = f"{self.args['query']}_{self.ID}_{datetime.now()}"
 
-        try:
-            if input("Are you sure you want to quit? [y/n]").lower().startswith('y'):
-                sys.exit(0)
+            else:
+                self.args['filename'] = self.args['filename'].replace(self.args['result'],'') + '_interrupted'
 
-        except KeyboardInterrupt:
-            sys.exit(1)
-
-        else:
-            signal.signal(signal.SIGINT, self.handle_sigint)
+            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
+            handle_class.handle_scrape(data, errors)
 
     def main(self):
+        # pass
         self.clear_console()
         if self.args['command'] == 'scrape':
             # scrape
             if self.args['marketplace'].lower() == 'tokopedia':
-                self.process = Tokopedia.Tokopedia(self.args)
+                self.process = tokopedia.Tokopedia(self.args)
                 self.process.start_scrape()
 
             elif self.args['marketplace'].lower() == 'bukalapak':
-                self.process = Bukalapak.Bukalapak(self.args)
+                self.process = bukalapak.Bukalapak(self.args)
                 self.process.start_scrape()
 
             elif self.args['marketplace'].lower() == 'shopee':
-                self.process = Shopee.Shopee(self.args)
+                self.process = shopee.Shopee(self.args)
                 self.process.start_scrape()
 
-        elif self.command == 'continue':
-            #continue
+        elif self.args['command'] == 'continue':
+            path = self.get_output_path()
+            self.process = lff.LoadFromFile(path=path, args=self.args)
+            self.process.continue_scrape()
 
-        elif self.command == 'load':
-            #load
+        # TODO CHECK IF RETRY IS WORKING
+        elif self.args['command'] == 'retry':
+            path = self.get_output_path()
+            self.process = lff.LoadFromFile(path=path, args=self.args)
+            self.process.retry()
+
+        elif self.args['command'] == 'convert':
+            path = self.get_output_path()
+            self.args['result'] = ''
+            self.process = lff.LoadFromFile(path=path, args=self.args)
+            self.process.convert()
+
+
         else:
-            sys.exit(1)
+            sys.exit(sc.ERROR_ARGUMENT)
 
 
 try:
