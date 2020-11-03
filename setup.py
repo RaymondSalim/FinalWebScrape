@@ -3,6 +3,7 @@ import platform
 import os
 import zipfile
 import shutil
+import webbrowser
 
 operating_system = platform.system()
 driver_path = str(os.path.dirname(os.path.realpath(__file__)))
@@ -22,17 +23,34 @@ def extract_zip():
     with zipfile.ZipFile('cd.zip', 'r') as zf:
         zf.extractall()
 
+    if os.path.exists('cd.zip'):
+        os.remove('cd.zip')
 
+# TODO! Fix Windows
 if str(operating_system) == 'Windows':
-    proc1 = subprocess.run(['start', 'chrome', '--version'])
+    proc1 = subprocess.run(['wmic', 'datafile', 'where', 'name="C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"', 'get', 'Version', '/value'],stdout=subprocess.PIPE)
+    proc2 = subprocess.run(['findstr', '/i', '"[0-9.]+"', proc1.stdout.decode('utf-8')], stdout=subprocess.PIPE)
+    version = proc2.stdout.decode('utf-8')
+    dl_url = get_url(version) + 'chromedriver_win32.zip'
+
+    subprocess.run(['curl', dl_url, '--output', 'cd.zip'])
+
     new_path = driver_path + '\\Files\\'
 
     if not os.path.exists(os.path.normpath(new_path)):
         os.mkdir(os.path.normpath(new_path))
+        os.mkdir(os.path.normpath(new_path.replace('Files', 'Output')))
+
+    extract_zip()
+
+
+    shutil.move(os.path.normpath(driver_path + '/chromedriver.exe'), os.path.normpath(new_path + 'chromedriver.exe'))
+    print("success")
 
     print(f"Failed to get chrome version, please download chromedriver "
           f"from\nhttps://chromedriver.storage.googleapis.com/\nPlace it inside Files folder with the name of "
           f"chromedriver.exe")
+    webbrowser.open('https://chromedriver.storage.googleapis.com/')
 else:
     try:
         proc1 = subprocess.run(['google-chrome-stable', '--version'], stdout=subprocess.PIPE)
@@ -46,8 +64,10 @@ else:
 
         if not os.path.exists(os.path.normpath(new_path)):
             os.mkdir(os.path.normpath(new_path))
+            os.mkdir(os.path.normpath(new_path.replace('Files', 'Output')))
 
         extract_zip()
+
 
         shutil.move(os.path.normpath(driver_path + '/chromedriver'), os.path.normpath(new_path + 'chromedriver'))
 
