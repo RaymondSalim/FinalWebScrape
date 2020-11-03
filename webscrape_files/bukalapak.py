@@ -334,7 +334,7 @@ class Bukalapak:
         print("Time taken: " + end_time)
 
         if self.args['command'] == "scrape":
-            if not "filename" in self.args.keys():
+            if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
                 self.args['filename'] = f"{self.args['query']}_{self.ID}_{end_time}"
 
