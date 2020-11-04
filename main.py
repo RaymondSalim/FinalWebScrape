@@ -204,7 +204,7 @@ class Main:
                 self.args['filename'] = f"{self.args['query']}_{id}_{datetime.now()}"
 
             else:
-                self.args['filename'] = self.args['filename'].replace(self.args['result'], '') + '_interrupted'
+                self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + '_interrupted'
 
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_scrape(data, errors)
@@ -212,40 +212,44 @@ class Main:
     def main(self):
         # pass
         self.clear_console()
-        if self.args['command'] == 'scrape':
-            # scrape
-            if self.args['marketplace'].lower() == 'tokopedia':
-                self.process = tokopedia.Tokopedia(self.args)
-                self.process.start_scrape()
+        try:
+            if self.args['command'] == 'scrape':
+                # scrape
+                if self.args['marketplace'].lower() == 'tokopedia':
+                    self.process = tokopedia.Tokopedia(self.args)
+                    self.process.start_scrape()
 
-            elif self.args['marketplace'].lower() == 'bukalapak':
-                self.process = bukalapak.Bukalapak(self.args)
-                self.process.start_scrape()
+                elif self.args['marketplace'].lower() == 'bukalapak':
+                    self.process = bukalapak.Bukalapak(self.args)
+                    self.process.start_scrape()
 
-            elif self.args['marketplace'].lower() == 'shopee':
-                self.process = shopee.Shopee(self.args)
-                self.process.start_scrape()
+                elif self.args['marketplace'].lower() == 'shopee':
+                    self.process = shopee.Shopee(self.args)
+                    self.process.start_scrape()
 
-        elif self.args['command'] == 'continue':
-            path = self.get_output_path()
-            self.process = lff.LoadFromFile(path=path, args=self.args)
-            self.process.continue_scrape()
+            elif self.args['command'] == 'continue':
+                path = self.get_output_path()
+                self.process = lff.LoadFromFile(path=path, args=self.args)
+                self.process.continue_scrape()
 
-        # TODO CHECK IF RETRY IS WORKING
-        elif self.args['command'] == 'retry':
-            path = self.get_output_path()
-            self.process = lff.LoadFromFile(path=path, args=self.args)
-            self.process.retry()
+            # TODO CHECK IF RETRY IS WORKING
+            elif self.args['command'] == 'retry':
+                path = self.get_output_path()
+                self.process = lff.LoadFromFile(path=path, args=self.args)
+                self.process.retry()
 
-        elif self.args['command'] == 'convert':
-            path = self.get_output_path()
-            self.args['result'] = ''
-            self.process = lff.LoadFromFile(path=path, args=self.args)
-            self.process.convert()
+            elif self.args['command'] == 'convert':
+                path = self.get_output_path()
+                self.args['result'] = ''
+                self.process = lff.LoadFromFile(path=path, args=self.args)
+                self.process.convert()
 
 
-        else:
-            sys.exit(sc.ERROR_ARGUMENT)
+            else:
+                sys.exit(sc.ERROR_ARGUMENT)
+        except Exception as err:
+            print(err)
+            self.handle_sigint(None, None)
 
 
 try:
