@@ -1,5 +1,6 @@
 import csv
 import json
+from urllib import parse
 
 from webscrape_files import shopee, tokopedia, bukalapak, handle_result
 
@@ -40,7 +41,7 @@ class LoadFromFile:
     def load_urls_from_scraped_file(self, data):
         urls = [values['SOURCE'] for values in data]
         self.args['query'] = data[0]['KEYWORD']
-        print(urls)
+        self.args['query_parsed'] = parse.quote(data[0]['KEYWORD'])
         return urls
 
     def continue_scrape(self):
