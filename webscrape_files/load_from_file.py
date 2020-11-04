@@ -48,6 +48,7 @@ class LoadFromFile:
         data = self.load_file()
         urls = self.load_urls_from_scraped_file(data)
         self.marketplace = data[0]['E-COMMERCE']
+        self.id = data[0]['E-COMMERCE']
 
         if self.marketplace.casefold() == 'tokopedia'.casefold():
             self.process = tokopedia.Tokopedia(self.args)
