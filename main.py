@@ -197,13 +197,14 @@ class Main:
     def handle_sigint(self, signum, frame):
         data = self.process.data
         errors = self.process.errors
+        id = self.process.id
         if len(data) > 0:
-            if not "filename" in self.args.keys():
+            if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{self.ID}_{datetime.now()}"
+                self.args['filename'] = f"{self.args['query']}_{id}_{datetime.now()}"
 
             else:
-                self.args['filename'] = self.args['filename'].replace(self.args['result'],'') + '_interrupted'
+                self.args['filename'] = self.args['filename'].replace(self.args['result'], '') + '_interrupted'
 
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_scrape(data, errors)
