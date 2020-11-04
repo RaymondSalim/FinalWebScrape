@@ -36,6 +36,7 @@ class Bukalapak:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = True
         chrome_options.add_argument('--log-level=3')
+        chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
         chrome_options.add_argument(
             'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0')
@@ -104,7 +105,7 @@ class Bukalapak:
             urls = self.get_urls_from_search_results(driver, start_page)
             self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
 
-            has_next = self.next_search_page
+            has_next = self.next_search_page(driver)
             if has_next == self.NEXT_PAGE_EXISTS:
                 start_page += 1
             elif has_next == self.NEXT_PAGE_DEAD:
@@ -336,7 +337,7 @@ class Bukalapak:
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{self.ID}_{end_time}"
+                self.args['filename'] = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '꞉')}"
 
             else:
                 self.args['filename'] = self.args['filename']
