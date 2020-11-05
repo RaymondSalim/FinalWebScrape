@@ -95,7 +95,7 @@ class HandleResult:
 
     def save_errors(self, path, errors):
         if len(errors) > 0:
-            path = path.replace('.json', '_errors.json')
+            path = path.replace('.json', '_errors.json').replace('.csv', '_errors.json')
             with open(path, 'w') as outFile:
                 json.dump(errors, outFile)
 
