@@ -201,7 +201,7 @@ class Main:
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{id}_{datetime.now()}"
+                self.args['filename'] = f"{self.args['query']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
 
             else:
                 self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + '_interrupted'
