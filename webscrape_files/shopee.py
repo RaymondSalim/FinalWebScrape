@@ -190,7 +190,7 @@ class Shopee:
         try:
             self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div.page-product'), ""),
                             "Page product not found")
-            self.wait.until(ec.text_to_be_present_in_element((By.CLASS_NAME, 'qaNIZv'), "Title not found"))
+            self.wait.until(ec.text_to_be_present_in_element((By.CLASS_NAME, 'qaNIZv'), ""), "Title not found")
 
         except Exception as err:
             print(err)
@@ -206,157 +206,157 @@ class Shopee:
             Starts scraping process here
             """
 
-            try:
-                driver.implicitly_wait(0)
-                d = dict()
+        try:
+            driver.implicitly_wait(0)
+            d = dict()
 
-                d['KEYWORD'] = self.args['query']
+            d['KEYWORD'] = self.args['query']
 
 
-                d['PRODUK'] = ""
-                d['FARMASI'] = ""
-                d['E-COMMERCE'] = 'SHOPEE'
+            d['PRODUK'] = ""
+            d['FARMASI'] = ""
+            d['E-COMMERCE'] = 'SHOPEE'
 
-                self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3Lybjn'), ""), "Shop name not found")
-                d['TOKO'] = driver.find_element_by_css_selector('div._3Lybjn').text
+            self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3Lybjn'), ""), "Shop name not found")
+            d['TOKO'] = driver.find_element_by_css_selector('div._3Lybjn').text
 
-                location = driver.find_elements_by_css_selector('div[class="kIo6pj"]')[-1].text
-                location = location.replace("Dikirim Dari",
-                                            "") if "Dikirim Dari" in location else "International"
-                d['ALAMAT'] = location
+            location = driver.find_elements_by_css_selector('div[class="kIo6pj"]')[-1].text
+            location = location.replace("Dikirim Dari",
+                                        "") if "Dikirim Dari" in location else "International"
+            d['ALAMAT'] = location
 
-                kota = None
+            kota = None
 
-                for city in cl.cities:
-                    if city.casefold() in location.casefold():
-                        kota = city
+            for city in cl.cities:
+                if city.casefold() in location.casefold():
+                    kota = city
+                    break
+
+            if kota is None:
+                for regency in cl.regencies:
+                    if regency.casefold() in location.casefold():
+                        kota = regency
                         break
 
-                if kota is None:
-                    for regency in cl.regencies:
-                        if regency.casefold() in location.casefold():
-                            kota = regency
-                            break
+            d['KOTA'] =kota or ""
 
-                d['KOTA'] =kota or ""
-
-                self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="qaNIZv"]')),"Product name not found")
-                nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
+            self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="qaNIZv"]')),"Product name not found")
+            nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
 
 
 
-                box_patt = r"(?i)((?:[0-9,]{1,6}[ ]?(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)))|(?:(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)(?:[ ]?[0-9.,]{1,6}))"
-                rbox = re.findall(box_patt, nama_produk)
+            box_patt = r"(?i)((?:[0-9,]{1,6}[ ]?(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)))|(?:(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)(?:[ ]?[0-9.,]{1,6}))"
+            rbox = re.findall(box_patt, nama_produk)
 
-                d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""
+            d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""
 
-                range_container = driver.find_element_by_css_selector('div[class="flex _3dRJGI _3a2wD-"]')
-                indiv_container = range_container.find_elements_by_css_selector('div[class="flex items-center"]')
+            range_container = driver.find_element_by_css_selector('div[class="flex _3dRJGI _3a2wD-"]')
+            indiv_container = range_container.find_elements_by_css_selector('div[class="flex items-center"]')
 
-                all_options = []
+            all_options = []
 
-                for i in range(0, len(indiv_container) - 1):
-                    indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_2iNrDS"]').text
-                    indiv_container_options = indiv_container[i].find_element_by_css_selector('div[class="flex items-center crl7WW"]')
-                    options = indiv_container_options.find_elements_by_css_selector('button[class*="product-variation"]')
-                    textoptions = [a.text for a in options]
-                    text = indiv_container_title + ': ' + ', '.join(textoptions)
-                    all_options.append(text)
+            for i in range(0, len(indiv_container) - 1):
+                indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_2iNrDS"]').text
+                indiv_container_options = indiv_container[i].find_element_by_css_selector('div[class="flex items-center crl7WW"]')
+                options = indiv_container_options.find_elements_by_css_selector('button[class*="product-variation"]')
+                textoptions = [a.text for a in options]
+                text = indiv_container_title + ': ' + ', '.join(textoptions)
+                all_options.append(text)
 
-                d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
+            d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
 
-                sold_count_val = driver.find_elements_by_css_selector('div[class="_22sp0A"]')
-                if len(sold_count_val) > 0:
-                    sol = sold_count_val[0].text
-                    if 'RB' in sol:
-                        sol = sol.replace('RB', '').replace(',', '').replace('+', '')
-                        sol = int(sol) * 100
-                    d['JUAL (UNIT TERKECIL)'] = int(sol) if int(sol) != 0 else ""
-
-                else:
-                    d['JUAL (UNIT TERKECIL)'] = ""
-
-
-                disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
-                if len(disc) > 0:
-                    disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
-                    disc = float(disc_float) / 100
-                else:
-                    disc = ""
-
-                prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
-                if len(prices) > 0:
-                    prices = prices[0].text.split()
-                else:
-                    prices = (driver.find_element_by_css_selector('div[class="_3n5NQx"]').text.split())
-                prices = [val.replace('.', '').replace('Rp', '') for val in prices]
-                try:
-                    prices.remove('-')
-                except ValueError:
-                    pass
-
-                if len(prices) == 1:
-                    d['HARGA UNIT TERKECIL'] = int(prices[0])
-                else:
-                    d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
-
-                d['VALUE'] = ""
-
-                d['% DISC'] = disc
-
-                shop_cat = driver.find_elements_by_css_selector('div[class="_1oAxCI"]')
-                if len(shop_cat) > 0:
-                    cat = shop_cat[0].text
-                    if "Star".casefold() in cat.casefold():
-                        cat = "STAR SELLER"
-                    elif "".casefold() == cat.casefold():
-                        cat = "OFFICIAL STORE"
-                else:
-                    cat = "TOKO BIASA"
-                d['KATEGORI'] = cat
-
-
-                url = driver.current_url
-                if '?' in url:
-                    url = url[:str(driver.current_url).index('?')]
-                d['SOURCE'] = url
-
-                if nama_produk.startswith('Star+'):
-                    nama_produk = nama_produk[6::]
-                elif nama_produk.startswith('Star'):
-                    nama_produk = nama_produk[5::]
-
-                d['NAMA PRODUK E-COMMERCE'] = nama_produk
-
-                rating_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n _2z6cUg"]')
-                d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text) * 20 if len(
-                    rating_val) > 0 else ""
-
-                rating_count_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n"]')
-                if len(rating_count_val) > 0:
-                    rat = rating_count_val[0].text
-                    if 'RB' in rat:
-                        rat = rat.replace('RB', '').replace(',', '').replace('+', '')
-                        rat = int(rat) * 1000
-                    d['JML ULASAN'] = int(rat)
-
-                else:
-                    d['JML ULASAN'] = ""
-
-                d['DILIHAT'] = ""
-
-                d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_2u0jt9"]').text
-
-                d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            except Exception as err:
-                print(err)
-                self.errors.append(driver.current_url)
+            sold_count_val = driver.find_elements_by_css_selector('div[class="_22sp0A"]')
+            if len(sold_count_val) > 0:
+                sol = sold_count_val[0].text
+                if 'RB' in sol:
+                    sol = sol.replace('RB', '').replace(',', '').replace('+', '')
+                    sol = int(sol) * 100
+                d['JUAL (UNIT TERKECIL)'] = int(sol) if int(sol) != 0 else ""
 
             else:
-                self.data.append(d)
-                self.scraped_count += 1
-                print(f"    Item #{self.scraped_count} completed")
+                d['JUAL (UNIT TERKECIL)'] = ""
+
+
+            disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
+            if len(disc) > 0:
+                disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
+                disc = float(disc_float) / 100
+            else:
+                disc = ""
+
+            prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
+            if len(prices) > 0:
+                prices = prices[0].text.split()
+            else:
+                prices = (driver.find_element_by_css_selector('div[class="_3n5NQx"]').text.split())
+            prices = [val.replace('.', '').replace('Rp', '') for val in prices]
+            try:
+                prices.remove('-')
+            except ValueError:
+                pass
+
+            if len(prices) == 1:
+                d['HARGA UNIT TERKECIL'] = int(prices[0])
+            else:
+                d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
+
+            d['VALUE'] = ""
+
+            d['% DISC'] = disc
+
+            shop_cat = driver.find_elements_by_css_selector('div[class="_1oAxCI"]')
+            if len(shop_cat) > 0:
+                cat = shop_cat[0].text
+                if "Star".casefold() in cat.casefold():
+                    cat = "STAR SELLER"
+                elif "".casefold() == cat.casefold():
+                    cat = "OFFICIAL STORE"
+            else:
+                cat = "TOKO BIASA"
+            d['KATEGORI'] = cat
+
+
+            url = driver.current_url
+            if '?' in url:
+                url = url[:str(driver.current_url).index('?')]
+            d['SOURCE'] = url
+
+            if nama_produk.startswith('Star+'):
+                nama_produk = nama_produk[6::]
+            elif nama_produk.startswith('Star'):
+                nama_produk = nama_produk[5::]
+
+            d['NAMA PRODUK E-COMMERCE'] = nama_produk
+
+            rating_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n _2z6cUg"]')
+            d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text) * 20 if len(
+                rating_val) > 0 else ""
+
+            rating_count_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n"]')
+            if len(rating_count_val) > 0:
+                rat = rating_count_val[0].text
+                if 'RB' in rat:
+                    rat = rat.replace('RB', '').replace(',', '').replace('+', '')
+                    rat = int(rat) * 1000
+                d['JML ULASAN'] = int(rat)
+
+            else:
+                d['JML ULASAN'] = ""
+
+            d['DILIHAT'] = ""
+
+            d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_2u0jt9"]').text
+
+            d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        except Exception as err:
+            print(err)
+            self.errors.append(driver.current_url)
+
+        else:
+            self.data.append(d)
+            self.scraped_count += 1
+            print(f"    Item #{self.scraped_count} completed")
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
