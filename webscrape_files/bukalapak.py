@@ -118,7 +118,6 @@ class Bukalapak:
     def retry_errors(self, urls):
         print("Start")
         self.start_time = datetime.now()
-
         driver = self.start_driver()
 
         for url in urls:
@@ -237,7 +236,7 @@ class Bukalapak:
                 nama_produk = driver.find_element_by_css_selector(
                     'h1[class="c-main-product__title u-txt--large"]').text
 
-                box_patt = r"(?i)((?:[0-9,]{1,6}[ ]?(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)))|(?:(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)(?:[ ]?[0-9.,]{1,6}))"
+                box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]+(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
                 rbox = re.findall(box_patt, nama_produk)
 
                 d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""

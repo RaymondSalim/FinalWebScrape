@@ -242,7 +242,7 @@ class Tokopedia:
 
                 nama_produk = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text
 
-                box_patt = r"(?i)((?:[0-9,]{1,6}[ ]?(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)))|(?:(?:box|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule)(?:[ ]?[0-9.,]{1,6}))"
+                box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]+(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
                 rbox = re.findall(box_patt, nama_produk)
 
                 d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""
