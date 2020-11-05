@@ -197,7 +197,7 @@ class Main:
     def handle_sigint(self, signum, frame):
         data = self.process.data
         errors = self.process.errors
-        id = self.process.id
+        id = self.process.ID
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
