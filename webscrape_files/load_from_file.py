@@ -1,8 +1,7 @@
 import csv
 import json
 from urllib import parse
-
-from webscrape_files import shopee, tokopedia, bukalapak, handle_result
+from webscrape_files import shopee, tokopedia, bukalapak, handle_result, status_codes as sc
 
 class LoadFromFile:
     def __init__(self, args, path=None):
@@ -28,15 +27,20 @@ class LoadFromFile:
             self.filetype = "json"
 
     def load_file(self):
-        if "json" in self.path:
-            with open(self.path, 'r') as openFile:
-                data = json.load(openFile)
+        try:
+            if "json" in self.path:
+                with open(self.path, 'r') as openFile:
+                    data = json.load(openFile)
 
-        elif "csv" in self.path:
-            with open(self.path, 'r') as openFile:
-                data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
-                             for row in csv.DictReader(openFile, skipinitialspace=True)]
-        return data
+            elif "csv" in self.path:
+                with open(self.path, 'r') as openFile:
+                    data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
+                                 for row in csv.DictReader(openFile, skipinitialspace=True)]
+            return data
+        except FileNotFoundError as err:
+            print(err)
+            print("File not found")
+            exit(sc.ERROR_GENERAL)
 
     def load_urls_from_scraped_file(self, data):
         urls = [values['SOURCE'] for values in data]
@@ -70,7 +74,6 @@ class LoadFromFile:
 
     def retry(self):
         urls = self.load_file()
-        print(urls[0])
         if "tokopedia" in urls[0]:
             self.process = tokopedia.Tokopedia(self.args)
             self.process.retry_errors(urls)
