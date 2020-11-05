@@ -1,3 +1,4 @@
+import csv
 import os
 import platform
 import re
@@ -26,6 +27,9 @@ class Tokopedia:
         self.errors = []
         self.scraped_count = 0
         self.driver_dir = str(os.path.dirname(os.path.realpath(__file__)))
+        self.first_append = True
+
+        self.file_name = None
 
         if str(self.operating_system) == 'Linux':
             self.driver_dir = self.driver_dir.replace('/webscrape_files', '/Files/chromedriver')
@@ -74,6 +78,8 @@ class Tokopedia:
                 urls = self.get_urls_from_search_results(driver, start_page)
                 self.scrape_from_url_list(driver, urls)
 
+                self.append_csv()
+
                 has_next = self.next_search_page(driver)
                 if has_next == self.NEXT_PAGE_EXISTS:
                     start_page += 1
@@ -85,7 +91,8 @@ class Tokopedia:
         finally:
             driver.quit()
 
-            self.handle_data()
+            if len(self.data) > 0:
+                self.append_csv()
 
     def continue_scrape(self, completed_urls):
         print("Start")
@@ -104,6 +111,8 @@ class Tokopedia:
             urls = self.get_urls_from_search_results(driver, start_page)
             self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
 
+            self.append_csv()
+
             has_next = self.next_search_page(driver)
             if has_next == self.NEXT_PAGE_EXISTS:
                 start_page += 1
@@ -112,8 +121,8 @@ class Tokopedia:
 
         driver.quit()
 
-
-        self.handle_data()
+        if len(self.data) > 0:
+            self.append_csv()
 
     def retry_errors(self, urls):
         print("Start")
@@ -127,7 +136,7 @@ class Tokopedia:
 
         driver.quit()
 
-        self.handle_data()
+        self.append_csv()
 
     def get_urls_from_search_results(self, driver: WebDriver, start_page) -> List[str]:
         try:
@@ -368,25 +377,50 @@ class Tokopedia:
         except NoSuchElementException as err:
             return self.NEXT_PAGE_DEAD
 
-    def handle_data(self):
-        end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("Time taken: " + end_time)
-
-        if self.args['command'] == "scrape":
+    def append_csv(self):
+        if self.file_name is None:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '꞉')}"
+                self.file_name = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '꞉')}"
+            else:
+                self.file_name = self.args['filename']
+
+        output_dir = str(os.path.dirname(os.path.realpath(__file__)))
+
+        if str(self.operating_system) == 'Linux':
+            output_dir = output_dir.replace('/webscrape_files', '/Output/')
+
+        elif str(self.operating_system) == 'Windows':
+            output_dir = output_dir.replace('\\webscrape_files', '\\Output\\')
+
+        keys = self.data[0].keys()
+
+        try:
+            if self.first_append:
+                with open(output_dir + self.file_name + '.csv', 'a', newline='', encoding='utf-8') as f:
+                    dict_writer = csv.DictWriter(f, keys)
+                    dict_writer.writeheader()
+                    dict_writer.writerows(self.data)
+
+                self.first_append = False
 
             else:
-                self.args['filename'] = self.args['filename']
+                with open(output_dir + self.file_name + '.csv', 'a', newline='', encoding='utf-8') as f:
+                    dict_writer = csv.writer(f, keys)
+                    dict_writer.writerows(self.data)
 
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
-            handle_class.handle_scrape(self.data, self.errors)
+        except Exception as err:
+            print(err)
+            print("Failed to append, skipping")
 
-        elif self.args['command'] == "continue":
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
-            handle_class.handle_continue(self.data, self.errors)
+        else:
+            print("Append succesful, clearing list")
+            self.data.clear()
 
-        elif self.args['command'] == "retry":
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
-            handle_class.handle_retry(self.data, self.errors)
+
+
+
+
+
+
+
