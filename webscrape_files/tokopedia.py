@@ -34,7 +34,7 @@ class Tokopedia:
 
     def start_driver(self) -> webdriver:
         chrome_options = webdriver.ChromeOptions()
-        # chrome_options.headless = True
+        chrome_options.headless = True
         chrome_options.add_argument('--log-level=3')
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
