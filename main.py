@@ -10,6 +10,8 @@ from webscrape_files import status_codes as sc
 from webscrape_files import load_from_file as lff
 from webscrape_files import shopee, tokopedia, bukalapak
 from webscrape_files.handle_result import HandleResult
+from urllib3.connection import NewConnectionError
+from http.client import HTTPException
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(required=True, dest='command')
@@ -247,6 +249,11 @@ class Main:
 
             else:
                 sys.exit(sc.ERROR_ARGUMENT)
+        except (NewConnectionError, HTTPException):
+            print("ayy")
+            sys.exit(sc.ERROR_GENERAL)
+            pass
+
         except Exception as err:
             print(err)
             self.handle_sigint(None, None)
@@ -256,7 +263,7 @@ try:
     args = parser.parse_args()
 except TypeError as err:
     parser.print_help()
-    exit()
+    sys.exit(sc.ERROR_ARGUMENT)
 else:
     if __name__ == "__main__":
         main = Main(args)
