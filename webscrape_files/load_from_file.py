@@ -1,7 +1,9 @@
 import csv
 import json
+import sys
 from urllib import parse
 from webscrape_files import shopee, tokopedia, bukalapak, handle_result, status_codes as sc
+
 
 class LoadFromFile:
     def __init__(self, args, path=None):
@@ -20,11 +22,17 @@ class LoadFromFile:
         elif "shopee" in self.path:
             self.marketplace = "shopee"
 
+        else:
+            sys.exit(sc.ERROR_GENERAL)
+
         if "csv" in self.path:
             self.filetype = "csv"
 
         elif "json" in self.path:
             self.filetype = "json"
+
+        else:
+            sys.exit(sc.ERROR_GENERAL)
 
     def load_file(self):
         try:
@@ -33,14 +41,14 @@ class LoadFromFile:
                     data = json.load(openFile)
 
             elif "csv" in self.path:
-                with open(self.path, 'r') as openFile:
+                with open(self.path, 'r', encoding=('utf-8')) as openFile:
                     data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
-                                 for row in csv.DictReader(openFile, skipinitialspace=True)]
+                            for row in csv.DictReader(openFile, skipinitialspace=True)]
             return data
         except FileNotFoundError as err:
             print(err)
             print("File not found")
-            exit(sc.ERROR_GENERAL)
+            sys.exit(sc.ERROR_GENERAL)
 
     def load_urls_from_scraped_file(self, data):
         urls = [values['SOURCE'] for values in data]
@@ -76,14 +84,20 @@ class LoadFromFile:
         urls = self.load_file()
         if "tokopedia" in urls[0]:
             self.process = tokopedia.Tokopedia(self.args)
+            self.data = self.process.data
+            self.errors = self.process.errors
             self.process.retry_errors(urls)
 
         elif "bukalapak" in urls[0]:
             self.process = bukalapak.Bukalapak(self.args)
+            self.data = self.process.data
+            self.errors = self.process.errors
             self.process.retry_errors(urls)
 
         elif "shopee" in urls[0]:
             self.process = shopee.Shopee(self.args)
+            self.data = self.process.data
+            self.errors = self.process.errors
             self.process.continue_scrape(urls)
 
     def convert(self):
