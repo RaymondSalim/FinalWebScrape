@@ -244,11 +244,14 @@ class Shopee:
             nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
 
 
-
-            box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]+(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
+            box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
             rbox = re.findall(box_patt, nama_produk)
 
-            d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""
+            reg = []
+            for tuple in rbox:
+                reg.append([var for var in tuple if var != ''])
+
+            d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
 
             range_container = driver.find_element_by_css_selector('div[class="flex _3dRJGI _3a2wD-"]')
             indiv_container = range_container.find_elements_by_css_selector('div[class="flex items-center"]')

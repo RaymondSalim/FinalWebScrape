@@ -236,10 +236,14 @@ class Bukalapak:
                 nama_produk = driver.find_element_by_css_selector(
                     'h1[class="c-main-product__title u-txt--large"]').text
 
-                box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]+(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
+                box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
                 rbox = re.findall(box_patt, nama_produk)
 
-                d['BOX'] = ', '.join(rbox) if len(rbox) > 0 else ""
+                reg = []
+                for tuple in rbox:
+                    reg.append([var for var in tuple if var != ''])
+
+                d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
 
                 d['RANGE'] = ''
 
