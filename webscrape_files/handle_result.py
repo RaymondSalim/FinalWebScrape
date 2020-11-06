@@ -103,12 +103,12 @@ class HandleResult:
 
     def handle_retry(self, data, errors):
         ## FROM ERRORS.json
-        if "csv" in self.file_name:
-            file_path = self.output_dir + self.file_name.replace('.csv', '_retry.csv')
+        if "csv" in self.file_type:
+            file_path = self.output_dir + self.file_name.replace('.csv', '_retry.' + self.file_type).replace('.json', '_retry.' + self.file_type)
             self.save_csv(file_path, data, errors)
 
-        elif "json" in self.file_name:
-            file_path = self.output_dir + self.file_name.replace('.json', '_retry.json')
+        elif "json" in self.file_type:
+            file_path = self.output_dir + self.file_name.replace('.json', '_retry.' + self.file_type).replace('.csv', '_retry.' + self.file_type)
 
             self.save_json(file_path, data, errors)
 
