@@ -82,6 +82,7 @@ class LoadFromFile:
 
     def retry(self):
         urls = self.load_file()
+        self.args['query'] = ''
         if "tokopedia" in urls[0]:
             self.process = tokopedia.Tokopedia(self.args)
             self.data = self.process.data
@@ -98,7 +99,7 @@ class LoadFromFile:
             self.process = shopee.Shopee(self.args)
             self.data = self.process.data
             self.errors = self.process.errors
-            self.process.continue_scrape(urls)
+            self.process.retry_errors(urls)
 
     def convert(self):
         data = self.load_file()
