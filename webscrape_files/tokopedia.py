@@ -258,11 +258,14 @@ class Tokopedia:
                     range_title = range_containers[i].find_elements_by_css_selector('p[class="css-1k51u5l-unf-heading e1qvo2ff8"]')
                     if len(range_title) > 0:
                         if range_title[0].text in ignored_containers:
-                            # if any(ignored.casefold() in )
                             continue
                         else:
                             title = range_title[0].text
-                            range_options = driver.find_elements_by_css_selector('div[data-testid="lblPDPProductVariantukuran"]')
+                            range_options = range_containers[i].find_elements_by_css_selector('div[data-testid="lblPDPProductVariantukuran"]')
+
+                            if len(range_options) < 0:
+                                range_options = range_containers[i].find_elements_by_css_selector('div[data-testid="lblPDPProductVariantwarna"]')
+
                             ranges = [a.text for a in range_options]
                             range_final = title + ': ' + ', '.join(ranges)
                             range_data.append(range_final)
