@@ -220,13 +220,15 @@ class Shopee:
             self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3Lybjn'), ""), "Shop name not found")
             d['TOKO'] = driver.find_element_by_css_selector('div._3Lybjn').text
 
-            location = driver.find_elements_by_css_selector('div[class="kIo6pj"]')[-1].text
-            location = location.replace("Dikirim Dari",
-                                        "") if "Dikirim Dari" in location else "International"
+            info = driver.find_elements_by_css_selector('div[class="kIo6pj"]')
+            location = None
+            for loc in info:
+                if "Dikirim Dari".casefold() in loc.text.casefold():
+                    location = loc.text
+            location = location.replace("Dikirim Dari", "").replace('\n', '') if location is not None else "International"
             d['ALAMAT'] = location
 
             kota = None
-
             for city in cl.cities:
                 if city.casefold() in location.casefold():
                     kota = city
@@ -242,7 +244,6 @@ class Shopee:
 
             self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="qaNIZv"]')),"Product name not found")
             nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
-
 
             box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
             rbox = re.findall(box_patt, nama_produk)
