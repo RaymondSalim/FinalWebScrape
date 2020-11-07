@@ -1,11 +1,9 @@
 import os
 import platform
-import re
 from typing import List
 from datetime import datetime
 from selenium import webdriver
 from webscrape_files.handle_result import HandleResult
-from . import city_list as cl
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -219,37 +217,14 @@ class Tokopedia:
 
                 self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'a[data-testid="llbPDPFooterShopName"]'), ""))
                 d['TOKO'] = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text
-                driver.implicitly_wait(0)
 
                 location = driver.find_element_by_css_selector('span[data-testid="lblPDPFooterLastOnline"]').text
                 location = location.split('•')[0]
                 d['ALAMAT'] = location
 
-                kota = None
+                d['KOTA'] = ""
 
-                for city in cl.cities:
-                    if city.casefold() in location.casefold():
-                        kota = city
-                        break
-
-                if kota is None:
-                    for regency in cl.regencies:
-                        if regency.casefold() in location.casefold():
-                            kota = regency
-                            break
-
-                d['KOTA'] = kota or ""
-
-                nama_produk = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text
-
-                box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
-                rbox = re.findall(box_patt, nama_produk)
-
-                reg = []
-                for tuple in rbox:
-                    reg.append([var for var in tuple if var != ''])
-
-                d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
+                d['BOX'] = ""
 
                 range_data = []
                 ignored_containers = ['HARGA', 'JUMLAH', 'PROMO', 'INFO PRODUK', 'ONGKOS KIRIM']
@@ -273,54 +248,34 @@ class Tokopedia:
 
                 sold_count_valid = driver.find_elements_by_css_selector(
                     'span[data-testid="lblPDPDetailProductSuccessRate"]')
-                sold_count = sold_count_valid[0].text if len(sold_count_valid) > 0 else ""
-                sold_count = sold_count[8:len(sold_count) - 7:].replace(',','').replace('.', '')
-                if "rb" in sold_count:
-                    sold_count = sold_count.replace('rb', '')
-                    sold_count = int(sold_count) * 100
-                d['JUAL (UNIT TERKECIL)'] = int(sold_count) if len(sold_count_valid) > 0 else ""
+                d['JUAL (UNIT TERKECIL)'] = sold_count_valid[0].text if len(sold_count_valid) > 0 else ""
 
-                price = driver.find_element_by_css_selector('h3[data-testid="lblPDPDetailProductPrice"]').text
-                d['HARGA UNIT TERKECIL'] = int((price[2::]).replace(".", ""))
+
+                d['HARGA UNIT TERKECIL'] = driver.find_element_by_css_selector('h3[data-testid="lblPDPDetailProductPrice"]').text
 
                 d['VALUE'] = ""
 
                 discount = driver.find_elements_by_css_selector('div[data-testid="lblPDPDetailDiscountPercentage"]')
-                d['% DISC'] = float(discount[0].text.replace('%',''))/100 if len(discount) > 0 else ""
+                d['% DISC'] = discount[0].text if len(discount) > 0 else ""
 
                 shop_category = driver.find_elements_by_css_selector('p[data-testid="imgPDPDetailShopBadge"]')
-                if len(shop_category) > 0:
-                    shop_category = shop_category[0].text
-                    if shop_category.casefold() == "Official Store".casefold():
-                        cat = "OFFICIAL STORE"
-                    elif shop_category.casefold() == "Power Merchant".casefold():
-                        cat = "STAR SELLER"
-                    elif shop_category.casefold() == "".casefold():
-                        cat = "TOKO BIASA"
-                    else:
-                        cat = "TOKO BIASA"
-                else:
-                    cat = "TOKO BIASA"
-                d['KATEGORI'] = cat
+                d['KATEGORI'] = shop_category[0].text if len(shop_category) > 0 else ""
 
                 url = driver.current_url
                 if '?' in url:
                     url = url[:str(driver.current_url).index('?')]
                 d['SOURCE'] = url
 
-                d['NAMA PRODUK E-COMMERCE'] = nama_produk
+                d['NAMA PRODUK E-COMMERCE'] = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text
 
                 rating = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductRatingNumber"]')
-                d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text)*20 if len(rating) > 0 else ""
+                d['RATING (Khusus shopee dan toped dikali 20)'] = rating[0].text if len(rating) > 0 else ""
 
                 rating_total = driver.find_elements_by_css_selector(
                     'span[data-testid="lblPDPDetailProductRatingCounter"]')
-                rating_total = rating_total[0].text.replace('(','').replace(')', '').replace(',','').replace('.', '') if len(rating_total) > 0 else ""
-                if "rb" in rating_total:
-                    rating_total = rating_total.replace('rb','')
-                    rating_total = int(rating_total) * 100
 
-                d['JML ULASAN'] = int(rating_total) if len(rating_total) > 0 else ""
+                d['JML ULASAN'] = rating_total[0].text if len(rating_total) > 0 else ""
+                print(d['JML ULASAN'])
 
                 seen_by = (
                     driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductSeenCounter"]'))
@@ -329,7 +284,7 @@ class Tokopedia:
                     seen_by = seen_by.replace('rb', '')
                     seen_by = int(seen_by) * 100
 
-                d['DILIHAT'] = int(seen_by)
+                d['DILIHAT'] = seen_by[0]
 
                 d['DESKRIPSI'] = driver.find_element_by_css_selector(
                     'div[data-testid="pdpDescriptionContainer"]').text
