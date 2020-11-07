@@ -130,3 +130,12 @@ class HandleResult:
             file_path = self.file_path.replace('.json', '.csv')
             self.save_csv(file_path, data, errors=[])
 
+    def handle_process(self, data):
+        if "json" in self.file_path:
+            fp = self.file_path.replace('.json', '_processed.json')
+            self.save_json(fp, data, errors=[])
+
+        elif "csv" in self.file_path:
+            fp = self.file_path.replace('.csv', '_processed.csv')
+            self.save_csv(fp, data, errors=[])
+
