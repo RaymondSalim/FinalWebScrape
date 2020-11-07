@@ -3,7 +3,7 @@ import json
 import sys
 from urllib import parse
 from webscrape_files import shopee, tokopedia, bukalapak, handle_result, status_codes as sc
-
+from webscrape_files.process import tokopedia as proc_tp  # , bukalapak, shopee
 
 class LoadFromFile:
     def __init__(self, args, path=None):
@@ -13,18 +13,6 @@ class LoadFromFile:
         self.check_file()
 
     def check_file(self):
-        if "tokopedia" in self.path:
-            self.marketplace = "tokopedia"
-
-        elif "bukalapak" in self.path:
-            self.marketplace = "bukalapak"
-
-        elif "shopee" in self.path:
-            self.marketplace = "shopee"
-
-        else:
-            sys.exit(sc.ERROR_GENERAL)
-
         if "csv" in self.path:
             self.filetype = "csv"
 
@@ -105,3 +93,11 @@ class LoadFromFile:
         data = self.load_file()
         hr = handle_result.HandleResult(file_path=self.path)
         hr.handle_convert(data)
+
+    def process(self):
+        data = self.load_file()
+        self.process = proc_tp.Tokopedia(data)
+        clean_data = self.process.process()
+        hr = handle_result.HandleResult(file_path=self.path)
+        hr.handle_process(clean_data)
+        
