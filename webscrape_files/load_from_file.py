@@ -13,18 +13,6 @@ class LoadFromFile:
         self.check_file()
 
     def check_file(self):
-        if "tokopedia" in self.path:
-            self.marketplace = "tokopedia"
-
-        elif "bukalapak" in self.path:
-            self.marketplace = "bukalapak"
-
-        elif "shopee" in self.path:
-            self.marketplace = "shopee"
-
-        else:
-            sys.exit(sc.ERROR_GENERAL)
-
         if "csv" in self.path:
             self.filetype = "csv"
 
@@ -41,9 +29,13 @@ class LoadFromFile:
                     data = json.load(openFile)
 
             elif "csv" in self.path:
-                with open(self.path, 'r', encoding=('utf-8')) as openFile:
+                with open(self.path, 'r', encoding=('utf-8'), newline='') as openFile:
                     data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
                             for row in csv.DictReader(openFile, skipinitialspace=True)]
+
+            else:
+                raise FileNotFoundError()
+
             return data
         except FileNotFoundError as err:
             print(err)
