@@ -226,19 +226,7 @@ class Shopee:
             location = location.replace("Dikirim Dari", "").replace('\n', '') if location is not None else "International"
             d['ALAMAT'] = location
 
-            kota = None
-            for city in cl.cities:
-                if city.casefold() in location.casefold():
-                    kota = city
-                    break
-
-            if kota is None:
-                for regency in cl.regencies:
-                    if regency.casefold() in location.casefold():
-                        kota = regency
-                        break
-
-            d['KOTA'] =kota or ""
+            d['KOTA'] =""
 
             d['BOX'] = ""
 
@@ -262,19 +250,10 @@ class Shopee:
 
             prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
             if len(prices) > 0:
-                prices = prices[0].text.split()
+                prices = prices[0].text
             else:
-                prices = (driver.find_element_by_css_selector('div[class="_3n5NQx"]').text.split())
-            prices = [val.replace('.', '').replace('Rp', '') for val in prices]
-            try:
-                prices.remove('-')
-            except ValueError:
-                pass
-
-            if len(prices) == 1:
-                d['HARGA UNIT TERKECIL'] = int(prices[0])
-            else:
-                d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
+                prices = driver.find_element_by_css_selector('div[class="_3n5NQx"]').text
+            d['HARGA UNIT TERKECIL'] = prices
 
             d['VALUE'] = ""
 
@@ -311,7 +290,7 @@ class Shopee:
             d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
             rating_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n _2z6cUg"]')
-            d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text) * 20 if len(
+            d['RATING (Khusus shopee dan toped dikali 20)'] = rating_val[0].text if len(
                 rating_val) > 0 else ""
 
             rating_count_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n"]')

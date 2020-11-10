@@ -27,7 +27,7 @@ class Shopee:
             'BOX': None,  # Processed below
             'RANGE': data['RANGE'],
             'JUAL (UNIT TERKECIL)': data['JUAL (UNIT TERKECIL)'],  # Processed below
-            'HARGA UNIT TERKECIL': data['HARGA UNIT TERKECIL'],
+            'HARGA UNIT TERKECIL': data['HARGA UNIT TERKECIL'],  # Processed below
             'VALUE': '',  # Empty
             '% DISC': data['% DISC'],  # Processed below
             'KATEGORI': data['KATEGORI'],
@@ -71,11 +71,26 @@ class Shopee:
         # END
 
         # Start Processing "JUAL (UNIT TERKECIL)"
-        sol = clean_row['JUAL (UNIT TERKECIL)']
+        sol = str(clean_row['JUAL (UNIT TERKECIL)'])
         if 'RB' in sol:
             sol = sol.replace('RB', '').replace(',', '').replace('+', '')
             sol = int(sol) * 100
         clean_row['JUAL (UNIT TERKECIL)'] = int(sol) if int(sol) != 0 else ""
+        # END
+
+        # Start Processing "HARGA UNIT TERKECIL"
+        prices = clean_row['HARGA UNIT TERKECIL'].split()
+        prices = [val.replace('.', '').replace('Rp', '') for val in prices]
+        try:
+            prices.remove('-')
+        except ValueError:
+            pass
+
+        if len(prices) == 1:
+            clean_row['HARGA UNIT TERKECIL'] = int(prices[0])
+        else:
+            clean_row['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
+
         # END
 
         # Start Processing "% DISC"
@@ -87,8 +102,15 @@ class Shopee:
         clean_row['% DISC'] = disc
         # END
 
+        # Start Processing "RATING (Khusus shopee dan toped dikali 20)"
+        rating = clean_row['RATING (Khusus shopee dan toped dikali 20)']
+        if rating != '':
+            rating = float(rating) * 20
+        clean_row['RATING (Khusus shopee dan toped dikali 20)'] = rating
+        # END
+
         # Start Processing "JML ULASAN"
-        rat = clean_row['JML ULASAN']
+        rat = str(clean_row['JML ULASAN'])
         if 'RB' in rat:
             rat = rat.replace('RB', '').replace(',', '').replace('+', '')
             rat = int(rat) * 1000
