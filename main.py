@@ -173,7 +173,7 @@ class Main:
         self.args = vars(arguments)
         self.check_args()
 
-    def get_final_path(self):
+    def get_output_path(self):
         if str(self.operating_system) == 'Windows':
             return current_path + '\\Output\\' + self.args['filename']
         else:
@@ -214,13 +214,16 @@ class Main:
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
+                self.args['filename'] = f"{self.args['query']}_{self.args['command']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
 
             else:
                 self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + '_interrupted'
 
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_scrape(data, errors)
+        else:
+            sys.exit(sc.SUCCESS_NORESULTS)
+
 
     def main(self):
         # pass
@@ -241,17 +244,17 @@ class Main:
                     self.process.start_scrape()
 
             elif self.args['command'] == 'continue':
-                path = self.get_final_path()
+                path = self.get_output_path()
                 self.process = lff.LoadFromFile(path=path, args=self.args)
                 self.process.continue_scrape()
 
             elif self.args['command'] == 'retry':
-                path = self.get_final_path()
+                path = self.get_output_path()
                 self.process = lff.LoadFromFile(path=path, args=self.args)
                 self.process.retry()
 
             elif self.args['command'] == 'convert':
-                path = self.get_final_path()
+                path = self.get_output_path()
                 self.args['result'] = ''
                 self.process = lff.LoadFromFile(path=path, args=self.args)
                 self.process.convert()

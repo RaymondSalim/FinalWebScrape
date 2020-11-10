@@ -29,9 +29,13 @@ class LoadFromFile:
                     data = json.load(openFile)
 
             elif "csv" in self.path:
-                with open(self.path, 'r', encoding=('utf-8')) as openFile:
+                with open(self.path, 'r', encoding=('utf-8'), newline='') as openFile:
                     data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
                             for row in csv.DictReader(openFile, skipinitialspace=True)]
+
+            else:
+                raise FileNotFoundError()
+
             return data
         except FileNotFoundError as err:
             print(err)

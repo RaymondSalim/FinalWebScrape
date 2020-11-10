@@ -164,8 +164,7 @@ class Shopee:
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
-
-            if any(completed in product for completed in completed_url):
+            if product in completed_url or any(completed in product for completed in completed_url):
                 print("Item skipped")
                 continue
 
