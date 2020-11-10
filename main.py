@@ -203,13 +203,16 @@ class Main:
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
+                self.args['filename'] = f"{self.args['query']}_{self.args['command']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
 
             else:
                 self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + '_interrupted'
 
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_scrape(data, errors)
+        else:
+            sys.exit(sc.SUCCESS_NORESULTS)
+
 
     def main(self):
         # pass
