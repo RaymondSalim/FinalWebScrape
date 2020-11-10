@@ -1,6 +1,5 @@
 import os
 import platform
-import re
 from typing import List
 from datetime import datetime
 from selenium import webdriver
@@ -241,17 +240,7 @@ class Shopee:
 
             d['KOTA'] =kota or ""
 
-            self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="qaNIZv"]')),"Product name not found")
-            nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
-
-            box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
-            rbox = re.findall(box_patt, nama_produk)
-
-            reg = []
-            for tuple in rbox:
-                reg.append([var for var in tuple if var != ''])
-
-            d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
+            d['BOX'] = ""
 
             range_container = driver.find_element_by_css_selector('div[class="flex _3dRJGI _3a2wD-"]')
             indiv_container = range_container.find_elements_by_css_selector('div[class="flex items-center"]')
@@ -269,23 +258,7 @@ class Shopee:
             d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
 
             sold_count_val = driver.find_elements_by_css_selector('div[class="_22sp0A"]')
-            if len(sold_count_val) > 0:
-                sol = sold_count_val[0].text
-                if 'RB' in sol:
-                    sol = sol.replace('RB', '').replace(',', '').replace('+', '')
-                    sol = int(sol) * 100
-                d['JUAL (UNIT TERKECIL)'] = int(sol) if int(sol) != 0 else ""
-
-            else:
-                d['JUAL (UNIT TERKECIL)'] = ""
-
-
-            disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
-            if len(disc) > 0:
-                disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
-                disc = float(disc_float) / 100
-            else:
-                disc = ""
+            d['JUAL (UNIT TERKECIL)'] = sold_count_val[0].text if len(sold_count_val) > 0 else ""
 
             prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
             if len(prices) > 0:
@@ -305,15 +278,19 @@ class Shopee:
 
             d['VALUE'] = ""
 
-            d['% DISC'] = disc
+            disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
+            d['% DISC'] = disc[0].text if len(disc) > 0 else ""
 
             shop_cat = driver.find_elements_by_css_selector('div[class="_1oAxCI"]')
             if len(shop_cat) > 0:
-                cat = shop_cat[0].text
-                if "Star".casefold() in cat.casefold():
-                    cat = "STAR SELLER"
-                elif "".casefold() == cat.casefold():
+                mall = shop_cat[0].find_elements_by_css_selector('img[class="official-shop-new-badge--all"]')
+                if len(mall) > 0:
                     cat = "OFFICIAL STORE"
+                else:
+                    cat = shop_cat[0].text
+                    if "Star".casefold() in cat.casefold():
+                        cat = "STAR SELLER"
+
             else:
                 cat = "TOKO BIASA"
             d['KATEGORI'] = cat
@@ -324,6 +301,8 @@ class Shopee:
                 url = url[:str(driver.current_url).index('?')]
             d['SOURCE'] = url
 
+            self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="qaNIZv"]')),"Product name not found")
+            nama_produk = driver.find_element_by_css_selector('div[class="qaNIZv"]').text
             if nama_produk.startswith('Star+'):
                 nama_produk = nama_produk[6::]
             elif nama_produk.startswith('Star'):
@@ -336,15 +315,7 @@ class Shopee:
                 rating_val) > 0 else ""
 
             rating_count_val = driver.find_elements_by_css_selector('div[class="_3Oj5_n"]')
-            if len(rating_count_val) > 0:
-                rat = rating_count_val[0].text
-                if 'RB' in rat:
-                    rat = rat.replace('RB', '').replace(',', '').replace('+', '')
-                    rat = int(rat) * 1000
-                d['JML ULASAN'] = int(rat)
-
-            else:
-                d['JML ULASAN'] = ""
+            d['JML ULASAN'] = rating_count_val[0].text if len(rating_count_val) > 0 else ""
 
             d['DILIHAT'] = ""
 
