@@ -66,7 +66,7 @@ class HandleResult:
 
         else:
             print("Nothing scraped")
-            sys.exit(sc.SUCCES_NORESULTS)
+            sys.exit(sc.SUCCESS_NORESULTS)
 
     def save_json(self, path, data, errors):
         if len(data) > 0:
@@ -91,7 +91,7 @@ class HandleResult:
 
         else:
             print("Nothing scraped")
-            sys.exit(sc.SUCCES_NORESULTS)
+            sys.exit(sc.SUCCESS_NORESULTS)
 
     def save_errors(self, path, errors):
         if len(errors) > 0:
