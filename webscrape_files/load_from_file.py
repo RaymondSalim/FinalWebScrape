@@ -3,7 +3,7 @@ import json
 import sys
 from urllib import parse
 from webscrape_files import shopee, tokopedia, bukalapak, handle_result, status_codes as sc
-from webscrape_files.process import tokopedia as proc_tp  # , bukalapak, shopee
+from webscrape_files.process import tokopedia as proc_tp, shopee as proc_shopee
 
 class LoadFromFile:
     def __init__(self, args, path=None):
@@ -100,7 +100,17 @@ class LoadFromFile:
 
     def process(self):
         data = self.load_file()
-        self.process = proc_tp.Tokopedia(data)
+        self.marketplace = data[0]['E-COMMERCE']
+
+        if self.marketplace.casefold() == 'tokopedia'.casefold():
+            self.process = proc_tp.Tokopedia(data)
+
+        elif self.marketplace.casefold() == 'shopee'.casefold():
+            self.process = proc_shopee.Shopee(data)
+
+        # elif self.marketplace.casefold() == 'bukalapak'.casefold():
+        #     self.process = proc_bl.Bukalapak(data)
+
         clean_data = self.process.process()
         hr = handle_result.HandleResult(file_path=self.path)
         hr.handle_process(clean_data)
