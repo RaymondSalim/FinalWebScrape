@@ -279,14 +279,6 @@ class Shopee:
             else:
                 d['JUAL (UNIT TERKECIL)'] = ""
 
-
-            disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
-            if len(disc) > 0:
-                disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
-                disc = float(disc_float) / 100
-            else:
-                disc = ""
-
             prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
             if len(prices) > 0:
                 prices = prices[0].text.split()
@@ -305,15 +297,25 @@ class Shopee:
 
             d['VALUE'] = ""
 
+            disc = driver.find_elements_by_css_selector('div[class="MITExd"]')
+            if len(disc) > 0:
+                disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
+                disc = float(disc_float) / 100
+            else:
+                disc = ""
+
             d['% DISC'] = disc
 
             shop_cat = driver.find_elements_by_css_selector('div[class="_1oAxCI"]')
             if len(shop_cat) > 0:
-                cat = shop_cat[0].text
-                if "Star".casefold() in cat.casefold():
-                    cat = "STAR SELLER"
-                elif "".casefold() == cat.casefold():
+                mall = shop_cat[0].find_elements_by_css_selector('img[class="official-shop-new-badge--all"]')
+                if len(mall) > 0:
                     cat = "OFFICIAL STORE"
+                else:
+                    cat = shop_cat[0].text
+                    if "Star".casefold() in cat.casefold():
+                        cat = "STAR SELLER"
+
             else:
                 cat = "TOKO BIASA"
             d['KATEGORI'] = cat
