@@ -13,10 +13,10 @@ class LoadFromFile:
         self.check_file()
 
     def check_file(self):
-        if "csv" in self.path:
+        if "csv" in self.path[-4::]:
             self.filetype = "csv"
 
-        elif "json" in self.path:
+        elif "json" in self.path[-4::]:
             self.filetype = "json"
 
         else:
@@ -24,11 +24,11 @@ class LoadFromFile:
 
     def load_file(self):
         try:
-            if "json" in self.path:
+            if self.filetype == "json":
                 with open(self.path, 'r') as openFile:
                     data = json.load(openFile)
 
-            elif "csv" in self.path:
+            elif self.filetype == "csv":
                 with open(self.path, 'r', encoding=('utf-8'), newline='') as openFile:
                     data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
                             for row in csv.DictReader(openFile, skipinitialspace=True)]
