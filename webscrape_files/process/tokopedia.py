@@ -1,6 +1,5 @@
 import re
 from typing import List, Dict
-
 from .. import city_list as cl
 
 
@@ -20,17 +19,17 @@ class Tokopedia:
     def process_row(self, data):
         clean_row = {
             'KEYWORD': data['KEYWORD'],
-            'PRODUK': '',  # Empty
-            'FARMASI': '',  # Empty
+            'PRODUK': data['PRODUK'],  # Empty
+            'FARMASI': data['FARMASI'],  # Empty
             'E-COMMERCE': 'TOKOPEDIA',
             'TOKO': data['TOKO'],
             'ALAMAT': data['ALAMAT'],
-            'KOTA': None,  # Processed below
-            'BOX': None,  # Processed below
+            'KOTA': data['KOTA'],  # Processed below
+            'BOX': data['KOTA'],  # Processed below
             'RANGE': data['RANGE'],
             'JUAL (UNIT TERKECIL)': data['JUAL (UNIT TERKECIL)'],  # Processed below
             'HARGA UNIT TERKECIL': data['HARGA UNIT TERKECIL'],  # Processed below
-            'VALUE': '',  # Empty
+            'VALUE': data['VALUE'],  # Empty
             '% DISC': data['% DISC'],  # Processed below
             'KATEGORI': data['KATEGORI'],  # Processed below
             'SOURCE': data['SOURCE'],
