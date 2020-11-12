@@ -218,86 +218,38 @@ class Bukalapak:
                 location = driver.find_element_by_css_selector('a[class="c-seller__city u-mrgn-bottom--2"]').text
                 d['ALAMAT'] = location
 
-                kota = None
+                d['KOTA'] = ""
 
-                for city in cl.cities:
-                    if city.casefold() in location.casefold():
-                        kota = city
-                        break
+                d['BOX'] = ""
 
-                if kota is None:
-                    for regency in cl.regencies:
-                        if regency.casefold() in location.casefold():
-                            kota = regency
-                            break
+                d['RANGE'] = ""
 
-                d['KOTA'] = kota or ""
+                d['JUAL (UNIT TERKECIL)'] = driver.find_element_by_class_name("c-main-product__reviews").text
 
-                nama_produk = driver.find_element_by_css_selector(
-                    'h1[class="c-main-product__title u-txt--large"]').text
-
-                box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
-                rbox = re.findall(box_patt, nama_produk)
-
-                reg = []
-                for tuple in rbox:
-                    reg.append([var for var in tuple if var != ''])
-
-                d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
-
-                d['RANGE'] = ''
-
-                mpr = driver.find_element_by_class_name("c-main-product__reviews").text
-                mpr_arr = mpr.split()
-
-                ratingc = None
-                soldc = None
-
-                if len(mpr_arr) == 4:
-                    ratingc = int(mpr_arr[0].replace('.', ''))
-                    soldc = int(mpr_arr[2].replace('.', ''))
-
-                elif len(mpr_arr) == 2:
-                    soldc = int(mpr_arr[0].replace('.', ''))
-
-                d['JUAL (UNIT TERKECIL)'] = int(soldc) if len(mpr) > 0 else ""
-
-                price = driver.find_element_by_css_selector('div.c-main-product__price').text.split('\n')
-                d['HARGA UNIT TERKECIL'] = float((price[0][2::]).replace(".", ""))
+                d['HARGA UNIT TERKECIL'] = driver.find_element_by_css_selector('div.c-main-product__price').text
 
                 d['VALUE'] = ""
 
                 discount = driver.find_elements_by_css_selector(
                     'span[class="c-main-product__price__discount-percentage"]')
                 if len(discount) > 0:
-                    text_disc = discount[0].text.split()
-                d['% DISC'] = float(text_disc[-1].replace('%', '')) / 100 if len(discount) > 0 else ""
+                    discount = discount[0].text
+                d['% DISC'] = discount if len(discount) > 0 else ""
 
                 shop_category = driver.find_element_by_css_selector('div[class="c-seller__badges"]')
-                cat = shop_category.text.replace('\n', '').replace(' ', '')
-                q = ['super', 'recommended', 'good', 'juragan']
-                if any(a in cat.casefold() for a in q):
-                    cat = "STAR SELLER"
-                elif "Resmi".casefold() == cat.casefold() or "bukamall" in shop_category.get_attribute('innerHTML'):
-                    cat = "OFFICIAL STORE"
-                elif "Pedagang".casefold() == cat.casefold():
-                    cat = "TOKO BIASA"
-                else:
-                    cat = "TOKO BIASA"
-
-                d['KATEGORI'] = cat
+                d['KATEGORI'] = shop_category.text if "bukamall" not in shop_category.get_attribute('innerHTML') else "bukamall"
 
                 url = driver.current_url
                 if '?' in url:
                     url = url[:str(driver.current_url).index('?')]
                 d['SOURCE'] = url
 
-                d['NAMA PRODUK E-COMMERCE'] = nama_produk
+                d['NAMA PRODUK E-COMMERCE'] = driver.find_element_by_css_selector('h1[class="c-main-product__title u-txt--large"]').text
 
                 rating = driver.find_elements_by_css_selector('span[class="summary__score"]')
                 d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text) if len(rating) > 0 else ""
 
-                d['JML ULASAN'] = int(ratingc) if len(mpr_arr) == 4 else ""
+                d['JML ULASAN'] = ""
 
                 d['DILIHAT'] = ""
 
