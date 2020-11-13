@@ -320,7 +320,7 @@ class Tokopedia:
                     rating_total = rating_total.replace('rb','')
                     rating_total = int(rating_total) * 100
 
-                d['JML ULASAN'] = int(rating_total) if len(rating_total) > 0 else ""
+                d['JML ULASAN'] = int(rating_total) if len(str(rating_total)) > 0 else ""
 
                 seen_by = (
                     driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductSeenCounter"]'))
