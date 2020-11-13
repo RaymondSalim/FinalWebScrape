@@ -162,7 +162,7 @@ class Main:
         self.args = vars(arguments)
         self.check_args()
 
-    def get_output_path(self):
+    def get_final_path(self):
         if str(self.operating_system) == 'Windows':
             return current_path + '\\Output\\' + self.args['filename']
         else:
@@ -233,18 +233,17 @@ class Main:
                     self.process.start_scrape()
 
             elif self.args['command'] == 'continue':
-                path = self.get_output_path()
+                path = self.get_final_path()
                 self.process = lff.LoadFromFile(path=path, args=self.args)
                 self.process.continue_scrape()
 
-            # TODO CHECK IF RETRY IS WORKING
             elif self.args['command'] == 'retry':
-                path = self.get_output_path()
+                path = self.get_final_path()
                 self.process = lff.LoadFromFile(path=path, args=self.args)
                 self.process.retry()
 
             elif self.args['command'] == 'convert':
-                path = self.get_output_path()
+                path = self.get_final_path()
                 self.args['result'] = ''
                 self.process = lff.LoadFromFile(path=path, args=self.args)
                 self.process.convert()
@@ -253,7 +252,6 @@ class Main:
             else:
                 sys.exit(sc.ERROR_ARGUMENT)
         except (NewConnectionError, HTTPException):
-            print("ayy")
             sys.exit(sc.ERROR_GENERAL)
             pass
 
