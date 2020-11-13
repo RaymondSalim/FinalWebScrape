@@ -79,18 +79,21 @@ class LoadFromFile:
             self.process = tokopedia.Tokopedia(self.args)
             self.data = self.process.data
             self.errors = self.process.errors
+            self.ID = "tokopedia"
             self.process.retry_errors(urls)
 
         elif "bukalapak" in urls[0]:
             self.process = bukalapak.Bukalapak(self.args)
             self.data = self.process.data
             self.errors = self.process.errors
+            self.ID = "bukalapak"
             self.process.retry_errors(urls)
 
         elif "shopee" in urls[0]:
             self.process = shopee.Shopee(self.args)
             self.data = self.process.data
             self.errors = self.process.errors
+            self.ID = "shopee"
             self.process.retry_errors(urls)
 
     def convert(self):
