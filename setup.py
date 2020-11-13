@@ -4,6 +4,7 @@ import os
 import zipfile
 import shutil
 import webbrowser
+import re
 
 operating_system = platform.system()
 driver_path = str(os.path.dirname(os.path.realpath(__file__)))
@@ -28,9 +29,24 @@ def extract_zip():
 
 # TODO! Fix Windows
 if str(operating_system) == 'Windows':
-    proc1 = subprocess.run(['wmic', 'datafile', 'where', 'name="C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"', 'get', 'Version', '/value'],stdout=subprocess.PIPE)
-    proc2 = subprocess.run(['findstr', '/i', '"[0-9.]+"', proc1.stdout.decode('utf-8')], stdout=subprocess.PIPE)
-    version = proc2.stdout.decode('utf-8')
+    proc1 = subprocess.run(['wmic', 'datafile', 'where', 'name="C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"', 'get', 'Version', '/value'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    version = proc1.stdout.decode('utf-8') + proc1.stderr.decode('utf-8')
+
+    if "No" in version:
+        proc1 = subprocess.run(['wmic', 'datafile', 'where', 'name="C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"', 'get', 'Version', '/value'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        version = proc1.stdout.decode('utf-8') + proc1.stderr.decode('utf-8')
+
+    pattern = "[0-9.]+"
+    version = (re.findall(pattern, version))[0]
+    
+    if "No" in version or len(version) == 0:
+        print(f"Failed to get chrome version, please download chromedriver "
+          f"from\nhttps://chromedriver.storage.googleapis.com/\nPlace it inside Files folder with the name of "
+          f"chromedriver.exe")
+        webbrowser.open('https://chromedriver.storage.googleapis.com/')
+        sys.exit(-1)
+        
+    
     dl_url = get_url(version) + 'chromedriver_win32.zip'
 
     subprocess.run(['curl', dl_url, '--output', 'cd.zip'])
@@ -43,14 +59,10 @@ if str(operating_system) == 'Windows':
 
     extract_zip()
 
-
     shutil.move(os.path.normpath(driver_path + '/chromedriver.exe'), os.path.normpath(new_path + 'chromedriver.exe'))
-    print("success")
+    print("\n\n\nSuccessful")
 
-    print(f"Failed to get chrome version, please download chromedriver "
-          f"from\nhttps://chromedriver.storage.googleapis.com/\nPlace it inside Files folder with the name of "
-          f"chromedriver.exe")
-    webbrowser.open('https://chromedriver.storage.googleapis.com/')
+
 else:
     try:
         proc1 = subprocess.run(['google-chrome-stable', '--version'], stdout=subprocess.PIPE)
@@ -74,12 +86,12 @@ else:
         print("Changing permission to executable requires sudo:")
         subprocess.run(['sudo', 'chmod', '+x', new_path + 'chromedriver'])
 
-        print("success")
+        print("\n\n\nSuccessful")
 
     except Exception as err:
         print(err)
         print("Failed")
-        exit(-1)
+        sys.exit(-1)
 
 
 
