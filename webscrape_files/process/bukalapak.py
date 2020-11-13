@@ -3,7 +3,7 @@ from typing import List, Dict
 from .. import city_list as cl
 
 
-class Bukalapk:
+class Bukalapak:
 
     def __init__(self, input_data):
         self.dirty_data = input_data
@@ -117,3 +117,5 @@ class Bukalapk:
         # Start Processing "JML ULASAN"
         clean_row['JML ULASAN'] = int(ratingc) if len(mpr_arr) == 4 else ""
         # END
+
+        return clean_row
