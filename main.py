@@ -269,7 +269,6 @@ class Main:
             else:
                 sys.exit(sc.ERROR_ARGUMENT)
         except (NewConnectionError, HTTPException):
-            print("ayy")
             sys.exit(sc.ERROR_GENERAL)
             pass
 
