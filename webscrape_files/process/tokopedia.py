@@ -130,5 +130,13 @@ class Tokopedia:
         # END
 
         # Start Processing 'DILIHAT'
+        seen_by = clean_row['DILIHAT']
+        seen_by = seen_by[0].text[:seen_by[0].text.index("x"):].replace('(', '').replace(')', '').replace(',', '').replace('.', '')
+        if "rb" in seen_by:
+            seen_by = seen_by.replace('rb', '')
+            seen_by = int(seen_by) * 100
+
+        clean_row['DILIHAT'] = seen_by
+        # END
 
         return clean_row

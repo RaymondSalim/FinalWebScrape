@@ -275,16 +275,11 @@ class Tokopedia:
                     'span[data-testid="lblPDPDetailProductRatingCounter"]')
 
                 d['JML ULASAN'] = rating_total[0].text if len(rating_total) > 0 else ""
-                print(d['JML ULASAN'])
 
                 seen_by = (
                     driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductSeenCounter"]'))
-                seen_by = seen_by[0].text[:seen_by[0].text.index("x"):].replace('(','').replace(')', '').replace(',','').replace('.', '')
-                if "rb" in seen_by:
-                    seen_by = seen_by.replace('rb', '')
-                    seen_by = int(seen_by) * 100
 
-                d['DILIHAT'] = seen_by[0]
+                d['DILIHAT'] = seen_by[0].text if len(seen_by) > 0 else ""
 
                 d['DESKRIPSI'] = driver.find_element_by_css_selector(
                     'div[data-testid="pdpDescriptionContainer"]').text
