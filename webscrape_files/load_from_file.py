@@ -3,7 +3,7 @@ import json
 import sys
 from urllib import parse
 from webscrape_files import shopee, tokopedia, bukalapak, handle_result, status_codes as sc
-from webscrape_files.process import tokopedia as proc_tp, shopee as proc_shopee
+from webscrape_files.process import tokopedia as proc_tp, shopee as proc_shopee, bukalapak as proc_bl
 
 class LoadFromFile:
     def __init__(self, args, path=None):
@@ -111,8 +111,8 @@ class LoadFromFile:
         elif self.marketplace.casefold() == 'shopee'.casefold():
             self.process = proc_shopee.Shopee(data)
 
-        # elif self.marketplace.casefold() == 'bukalapak'.casefold():
-        #     self.process = proc_bl.Bukalapak(data)
+        elif self.marketplace.casefold() == 'bukalapak'.casefold():
+            self.process = proc_bl.Bukalapak(data)
 
         clean_data = self.process.process()
         hr = handle_result.HandleResult(file_path=self.path)
