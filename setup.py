@@ -1,6 +1,7 @@
 import subprocess
 import platform
 import os
+import sys
 import zipfile
 import shutil
 import webbrowser
@@ -40,7 +41,7 @@ if str(operating_system) == 'Windows':
     version = (re.findall(pattern, version))[0]
     
     if "No" in version or len(version) == 0:
-        print(f"Failed to get chrome version, please download chromedriver "
+        print(f"Failed to get chrome version, please ensure you have google chrome installed and download chromedriver "
           f"from\nhttps://chromedriver.storage.googleapis.com/\nPlace it inside Files folder with the name of "
           f"chromedriver.exe")
         webbrowser.open('https://chromedriver.storage.googleapis.com/')
@@ -66,6 +67,10 @@ if str(operating_system) == 'Windows':
 else:
     try:
         proc1 = subprocess.run(['google-chrome-stable', '--version'], stdout=subprocess.PIPE)
+        if "command not found" in proc1.stdout.decode('utf-8'):
+            print("Google chrome not found, please ensure you have google chrome installed")
+            sys.exit(-1)
+
         proc2 = subprocess.run(["grep", "-Eo", "[0-9.]+"], input=proc1.stdout, stdout=subprocess.PIPE)
         version = proc2.stdout.decode('utf-8')
         dl_url = get_url(version) + 'chromedriver_linux64.zip'
@@ -84,7 +89,8 @@ else:
         shutil.move(os.path.normpath(driver_path + '/chromedriver'), os.path.normpath(new_path + 'chromedriver'))
 
         print("Changing permission to executable requires sudo:")
-        subprocess.run(['sudo', 'chmod', '+x', new_path + 'chromedriver'])
+        # subprocess.run(['sudo', 'chmod', '+x', new_path + 'chromedriver'])
+        print("Please mark chromedriver as executable with the following:\n    sudo chmod +x " + new_path + "chromedriver")
 
         print("\n\n\nSuccessful")
 
