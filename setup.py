@@ -56,7 +56,10 @@ if str(operating_system) == 'Windows':
 
     if not os.path.exists(os.path.normpath(new_path)):
         os.mkdir(os.path.normpath(new_path))
-        os.mkdir(os.path.normpath(new_path.replace('Files', 'Output')))
+        try:
+            os.mkdir(os.path.normpath(new_path.replace('Files', 'Output')))
+        except FileExistsError:
+            pass
 
     extract_zip()
 
@@ -67,9 +70,6 @@ if str(operating_system) == 'Windows':
 else:
     try:
         proc1 = subprocess.run(['google-chrome-stable', '--version'], stdout=subprocess.PIPE)
-        if "command not found" in proc1.stdout.decode('utf-8'):
-            print("Google chrome not found, please ensure you have google chrome installed")
-            sys.exit(-1)
 
         proc2 = subprocess.run(["grep", "-Eo", "[0-9.]+"], input=proc1.stdout, stdout=subprocess.PIPE)
         version = proc2.stdout.decode('utf-8')
@@ -81,23 +81,30 @@ else:
 
         if not os.path.exists(os.path.normpath(new_path)):
             os.mkdir(os.path.normpath(new_path))
-            os.mkdir(os.path.normpath(new_path.replace('Files', 'Output')))
+            try:
+                os.mkdir(os.path.normpath(new_path.replace('Files', 'Output')))
+            except FileExistsError:
+                pass
 
         extract_zip()
 
 
         shutil.move(os.path.normpath(driver_path + '/chromedriver'), os.path.normpath(new_path + 'chromedriver'))
 
-        print("Changing permission to executable requires sudo:")
         # subprocess.run(['sudo', 'chmod', '+x', new_path + 'chromedriver'])
-        print("Please mark chromedriver as executable with the following:\n    sudo chmod +x " + new_path + "chromedriver")
+        print("\nPlease mark chromedriver as executable with the following:\n\n\n    sudo chmod +x " + new_path + "chromedriver")
 
         print("\n\n\nSuccessful")
 
     except Exception as err:
-        print(err)
-        print("Failed")
+        if "command not found".casefold() in str(err).casefold() or "No such file".casefold() in str(err).casefold():
+            print("Google chrome not found, please ensure you have google chrome installed")
+        else:
+            print(err)
+
+        print("Setup Failed")
         sys.exit(-1)
+
 
 
 
