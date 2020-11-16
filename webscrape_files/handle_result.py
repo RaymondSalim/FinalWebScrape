@@ -114,11 +114,11 @@ class HandleResult:
 
     def handle_continue(self, data, errors):
         if "csv" in self.file_name:
-            file_path = self.output_dir + self.file_name.replace('.csv', '_continued.csv')
+            file_path = self.output_dir + self.file_name.replace('.csv', '_continue.csv')
             self.save_csv(file_path, data, errors)
 
         elif "json" in self.file_name:
-            file_path = self.output_dir + self.file_name.replace('.json', '_continued.json')
+            file_path = self.output_dir + self.file_name.replace('.json', '_continue.json')
             self.save_json(file_path, data, errors)
 
     def handle_convert(self, data):
