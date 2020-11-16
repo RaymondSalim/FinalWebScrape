@@ -205,6 +205,11 @@ class Main:
                 # Filename argument is not specified, so filename will be generated
                 self.args['filename'] = f"{self.args['query']}_{self.args['command']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
 
+            else:
+                if self.args['command'] != 'scrape':
+                    self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + f"_${self.args['command']}"
+
+
             print("Process is interrupted, results might not be complete")
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_scrape(data, errors)
