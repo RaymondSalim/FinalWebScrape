@@ -46,6 +46,8 @@ class Tokopedia:
 
         driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
 
+        print(f"Browser PID: {driver.service.process.pid}")
+
         self.wait = WebDriverWait(driver, self.timeout_limit)
 
         return driver
