@@ -45,6 +45,7 @@ class Bukalapak:
         })  # Prevents annoying "Show notifications" request
 
         driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
+        self.driver = driver
 
         print(f"Browser PID: {driver.service.process.pid}")
 
