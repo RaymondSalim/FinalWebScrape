@@ -208,6 +208,12 @@ class Main:
         self.args['query_parsed'] = parse.quote(self.args['query'])
 
     def handle_sigint(self, signum, frame):
+        try:
+            driver = self.process.driver
+            driver.quit()
+        except AttributeError:
+            pass
+
         data = self.process.data
         errors = self.process.errors
         id = self.process.ID
@@ -218,7 +224,7 @@ class Main:
 
             else:
                 if self.args['command'] != 'scrape':
-                    self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + f"_${self.args['command']}"
+                    self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + f"_{self.args['command']}"
 
 
             print("Process is interrupted, results might not be complete")

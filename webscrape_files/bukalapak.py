@@ -46,6 +46,8 @@ class Bukalapak:
 
         driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
 
+        print(f"Browser PID: {driver.service.process.pid}")
+
         self.wait = WebDriverWait(driver, self.timeout_limit)
 
         return driver
@@ -282,7 +284,7 @@ class Bukalapak:
             print(err)
             return self.NEXT_PAGE_DEAD
 
-        except NoSuchElementException as err:
+        except NoSuchElementException:
             return self.NEXT_PAGE_DEAD
 
     def handle_data(self):
