@@ -34,8 +34,9 @@ class Tokopedia:
 
     def start_driver(self) -> webdriver:
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.headless = True
-        chrome_options.add_argument('--log-level=3')
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
         chrome_options.add_argument(
@@ -44,10 +45,10 @@ class Tokopedia:
             "profile.default_content_setting_values.notifications": 2
         })  # Prevents annoying "Show notifications" request
 
-        driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
+        driver = webdriver.Chrome(r'/content/Scrape/Files/chromedriver', options=chrome_options)
         self.driver = driver
 
-        print(f"Browser PID: {driver.service.process.pid}")
+        print(f"{self.ID} {self.args['query']} Browser PID: {driver.service.process.pid}")
 
         self.wait = WebDriverWait(driver, self.timeout_limit)
 
@@ -346,7 +347,7 @@ class Tokopedia:
             else:
                 self.data.append(d)
                 self.scraped_count += 1
-                print(f"    Item #{self.scraped_count} completed")
+                print(f"    {self.ID} {self.args['query']} Item #{self.scraped_count} completed")
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
@@ -354,7 +355,7 @@ class Tokopedia:
             next_button = driver.find_element_by_css_selector('button[aria-label="Halaman berikutnya"]')
 
             if next_button.is_enabled():
-                print("Next page")
+                print("{self.ID} {self.args['query']} Next page")
                 next_button.click()
 
                 self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'pcv3__info-content')),
@@ -373,7 +374,7 @@ class Tokopedia:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("Time taken: " + end_time)
+        print("{self.ID} {self.args['query']} iTime taken: " + end_time)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':
