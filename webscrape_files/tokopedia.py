@@ -143,7 +143,7 @@ class Tokopedia:
             pass
 
         finally:
-            print(f"Page {start_page}")
+            print(f"{self.ID} {self.args['query']} Page {start_page}")
             search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
             products = search_results.find_elements_by_class_name('pcv3__info-content')
             list_of_url = []
@@ -355,7 +355,7 @@ class Tokopedia:
             next_button = driver.find_element_by_css_selector('button[aria-label="Halaman berikutnya"]')
 
             if next_button.is_enabled():
-                print("{self.ID} {self.args['query']} Next page")
+                print(f"{self.ID} {self.args['query']} Next page")
                 next_button.click()
 
                 self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'pcv3__info-content')),
@@ -374,7 +374,7 @@ class Tokopedia:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("{self.ID} {self.args['query']} iTime taken: " + end_time)
+        print(f"{self.ID} {self.args['query']} iTime taken: " + end_time)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':

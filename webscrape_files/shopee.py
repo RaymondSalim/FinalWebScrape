@@ -150,7 +150,7 @@ class Shopee:
                 return []
 
             else:
-                print(f"Page {start_page}")
+                print(f"{self.ID} {self.args['query']} Page {start_page}")
                 search_results = driver.find_element_by_css_selector(
                     'div[class="row shopee-search-item-result__items"]')
                 products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
@@ -374,7 +374,7 @@ class Shopee:
                 'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')
 
             if next_button.is_enabled():
-                print("{self.ID} {self.args['query']} Next page")
+                print(f"{self.ID} {self.args['query']} Next page")
                 next_button.click()
                 self.wait.until(ec.presence_of_element_located(
                     (By.CSS_SELECTOR, 'div.shopee-search-item-result__item')),
@@ -392,7 +392,7 @@ class Shopee:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("{self.ID} {self.args['query']} Time taken: " + end_time)
+        print(f"{self.ID} {self.args['query']} Time taken: " + end_time)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':

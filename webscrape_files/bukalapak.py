@@ -151,7 +151,7 @@ class Bukalapak:
                 return []
 
             else:
-                print(f"Page {start_page}")
+                print(f"{self.ID} {self.args['query']} Page {start_page}")
                 products = driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
 
                 list_of_url = []
@@ -324,7 +324,7 @@ class Bukalapak:
             next_button = driver.find_element_by_css_selector("a[class*='pagination__next']")
 
             if next_button.is_enabled():
-                print("{self.ID} {self.args['query']} Next page")
+                print(f"{self.ID} {self.args['query']} Next page")
                 next_button.click()
                 return self.NEXT_PAGE_EXISTS
             else:
@@ -339,7 +339,7 @@ class Bukalapak:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("{self.ID} {self.args['query']} Time taken: " + end_time)
+        print(f"{self.ID} {self.args['query']} Time taken: " + end_time)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':
