@@ -8,12 +8,19 @@ class Bukalapak:
     def __init__(self, input_data):
         self.dirty_data = input_data
         self.clean_data = []
+        self.url_completed = []
 
     def process(self) -> List[Dict]:
+        duplicates = 0
         for data in self.dirty_data:
+            if (data['SOURCE'] in self.url_completed):
+                duplicates += 1
+                continue
+
             clean = self.process_row(data)
             self.clean_data.append(clean)
 
+        print(f"{duplicates} Duplicates skipped")
         return self.clean_data
 
     def process_row(self, data):
@@ -41,6 +48,7 @@ class Bukalapak:
             'DESKRIPSI': data['DESKRIPSI'],
             'TANGGAL OBSERVASI': data['TANGGAL OBSERVASI']
         }
+        self.url_completed.append(clean_row['SOURCE'])
 
         # Start Processing "KOTA"
         kota = None

@@ -236,7 +236,7 @@ class Main:
 
     def main(self):
         # pass
-        self.clear_console()
+        # self.clear_console()
         try:
             if self.args['command'] == 'scrape':
                 # scrape
