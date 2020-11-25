@@ -254,8 +254,13 @@ class Shopee:
             prices = driver.find_elements_by_css_selector('div[class="_3_ISdg"]')
             if len(prices) > 0:
                 prices = prices[0].text
+                if len(prices) == 0:
+                    prices = driver.find_element_by_css_selector('div[class="_3n5NQx"]').text
             else:
                 prices = driver.find_element_by_css_selector('div[class="_3n5NQx"]').text
+
+            if len(prices) == 0:
+                raise Exception
             d['HARGA UNIT TERKECIL'] = prices
 
             d['VALUE'] = ""

@@ -96,8 +96,10 @@ class Shopee:
 
         if len(prices) == 1:
             clean_row['HARGA UNIT TERKECIL'] = int(prices[0])
-        else:
+        elif len(prices) == 2:
             clean_row['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
+        else:
+            return {}
 
         # END
 
