@@ -243,19 +243,22 @@ class Main:
 
             elif self.args['command'] == 'continue':
                 path = self.get_final_path()
-                self.process = lff.LoadFromFile(path=path, args=self.args)
-                self.process.continue_scrape()
+                load = lff.LoadFromFile(path=path, args=self.args)
+                load.continue_scrape()
+                self.process = load.process
 
             elif self.args['command'] == 'retry':
                 path = self.get_final_path()
-                self.process = lff.LoadFromFile(path=path, args=self.args)
-                self.process.retry()
+                load = lff.LoadFromFile(path=path, args=self.args)
+                load.retry()
+                self.process = load.process
 
             elif self.args['command'] == 'convert':
                 path = self.get_final_path()
                 self.args['result'] = ''
-                self.process = lff.LoadFromFile(path=path, args=self.args)
-                self.process.convert()
+                load = lff.LoadFromFile(path=path, args=self.args)
+                load.convert()
+                self.process = load.process
 
 
             else:
@@ -265,8 +268,14 @@ class Main:
             pass
 
         except Exception as err:
-            print(err)
-            self.handle_sigint(None, None)
+            try:
+                driver = self.process.driver
+                driver.quit()
+            except AttributeError:
+                pass
+            finally:
+                print(err)
+                self.handle_sigint(None, None)
 
 
 try:
