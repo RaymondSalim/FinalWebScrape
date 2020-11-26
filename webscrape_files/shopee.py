@@ -287,6 +287,7 @@ class Shopee:
                 prices = prices[0].text.split()
             else:
                 prices = (driver.find_element_by_css_selector('div[class="_3n5NQx"]').text.split())
+
             prices = [val.replace('.', '').replace('Rp', '') for val in prices]
             try:
                 prices.remove('-')
@@ -295,8 +296,10 @@ class Shopee:
 
             if len(prices) == 1:
                 d['HARGA UNIT TERKECIL'] = int(prices[0])
-            else:
+            elif len(prices) == 2:
                 d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
+            else:
+                raise Exception("    Price not found")
 
             d['VALUE'] = ""
 
