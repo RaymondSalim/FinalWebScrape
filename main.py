@@ -243,28 +243,28 @@ class Main:
 
             elif self.args['command'] == 'continue':
                 path = self.get_final_path()
-                load = lff.LoadFromFile(path=path, args=self.args)
-                load.continue_scrape()
-                self.process = load.process
+                self.process = lff.LoadFromFile(path=path, args=self.args)
+                self.process.continue_scrape()
 
             elif self.args['command'] == 'retry':
                 path = self.get_final_path()
-                load = lff.LoadFromFile(path=path, args=self.args)
-                load.retry()
-                self.process = load.process
+                self.process = lff.LoadFromFile(path=path, args=self.args)
+                self.process.retry()
 
             elif self.args['command'] == 'convert':
                 path = self.get_final_path()
                 self.args['result'] = ''
-                load = lff.LoadFromFile(path=path, args=self.args)
-                load.convert()
-                self.process = load.process
+                self.process = lff.LoadFromFile(path=path, args=self.args)
+                self.process.convert()
 
 
             else:
                 sys.exit(sc.ERROR_ARGUMENT)
         except (NewConnectionError, HTTPException):
             sys.exit(sc.ERROR_GENERAL)
+            pass
+
+        except KeyboardInterrupt:
             pass
 
         except Exception as err:
