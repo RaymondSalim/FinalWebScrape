@@ -14,7 +14,7 @@ from urllib3.connection import NewConnectionError
 from http.client import HTTPException
 
 parser = argparse.ArgumentParser()
-subparsers = parser.add_subparsers(required=True, dest='command')
+subparsers = parser.add_subparsers(dest='command')
 
 scrape_parser = subparsers.add_parser('scrape', help="Command to scrape", usage="""
 
