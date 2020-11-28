@@ -9,6 +9,8 @@ class LoadFromFile:
     def __init__(self, args, path=None):
         self.path = path
         self.args = args
+        self.data = []
+        self.errors = []
         self.result = args['result'] or ""
         self.check_file()
 

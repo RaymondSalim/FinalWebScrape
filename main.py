@@ -264,9 +264,18 @@ class Main:
             sys.exit(sc.ERROR_GENERAL)
             pass
 
+        except KeyboardInterrupt:
+            pass
+
         except Exception as err:
-            print(err)
-            self.handle_sigint(None, None)
+            try:
+                driver = self.process.driver
+                driver.quit()
+            except AttributeError:
+                pass
+            finally:
+                print(err)
+                self.handle_sigint(None, None)
 
 
 try:
