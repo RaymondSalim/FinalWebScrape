@@ -98,39 +98,50 @@ class Shopee:
         start_page = self.args['startpage'] or 1
         self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
 
-        driver = self.start_driver()
+        try:
 
-        url = f"https://shopee.co.id/search?page={start_page-1}&keyword={self.args['query_parsed']}"
+            driver = self.start_driver()
 
-        driver.get(url)
+            url = f"https://shopee.co.id/search?page={start_page-1}&keyword={self.args['query_parsed']}"
 
-        while start_page <= self.args['endpage']:
-            urls = self.get_urls_from_search_results(driver, start_page)
-            self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
+            driver.get(url)
 
-            has_next = self.next_search_page(driver)
-            if has_next == self.NEXT_PAGE_EXISTS:
-                start_page += 1
-            elif has_next == self.NEXT_PAGE_DEAD:
-                break
+            while start_page <= self.args['endpage']:
+                urls = self.get_urls_from_search_results(driver, start_page)
+                self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
 
-        driver.quit()
+                has_next = self.next_search_page(driver)
+                if has_next == self.NEXT_PAGE_EXISTS:
+                    start_page += 1
+                elif has_next == self.NEXT_PAGE_DEAD:
+                    break
 
-        self.handle_data()
+        except Exception as err:
+            print(err)
+
+        finally:
+            driver.quit()
+
+            self.handle_data()
 
     def retry_errors(self, urls):
         print("Start")
         self.start_time = datetime.now()
 
-        driver = self.start_driver()
+        try:
+            driver = self.start_driver()
 
-        for url in urls:
-            driver.get(url)
-            self.scrape_product_page(driver)
+            for url in urls:
+                driver.get(url)
+                self.scrape_product_page(driver)
 
-        driver.quit()
+        except Exception as err:
+            print(err)
 
-        self.handle_data()
+        finally:
+            driver.quit()
+
+            self.handle_data()
 
     def get_urls_from_search_results(self, driver: WebDriver, start_page) -> List[str]:
         try:
