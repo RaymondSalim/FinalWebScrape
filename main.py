@@ -260,7 +260,7 @@ class Main:
                 self.process.retry(urls=[self.args['url']])
 
             else:
-                self.clear_console()
+                # self.clear_console()
 
                 if self.args['command'] == 'scrape':
                     # scrape
