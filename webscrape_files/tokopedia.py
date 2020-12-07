@@ -95,40 +95,50 @@ class Tokopedia:
         start_page = self.args['startpage'] or 1
         self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
 
-        driver = self.start_driver()
+        try:
+            driver = self.start_driver()
 
-        url = f"https://www.tokopedia.com/search?page={start_page}&q={self.args['query_parsed']}"
+            url = f"https://www.tokopedia.com/search?page={start_page}&q={self.args['query_parsed']}"
 
-        driver.get(url)
+            driver.get(url)
 
-        while start_page <= self.args['endpage']:
-            urls = self.get_urls_from_search_results(driver, start_page)
-            self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
+            while start_page <= self.args['endpage']:
+                urls = self.get_urls_from_search_results(driver, start_page)
+                self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
 
-            has_next = self.next_search_page(driver)
-            if has_next == self.NEXT_PAGE_EXISTS:
-                start_page += 1
-            elif has_next == self.NEXT_PAGE_DEAD:
-                break
+                has_next = self.next_search_page(driver)
+                if has_next == self.NEXT_PAGE_EXISTS:
+                    start_page += 1
+                elif has_next == self.NEXT_PAGE_DEAD:
+                    break
 
-        driver.quit()
+        except Exception as err:
+            print(err)
 
+        finally:
+            driver.quit()
 
-        self.handle_data()
+            self.handle_data()
+
 
     def retry_errors(self, urls):
         print("Start")
         self.start_time = datetime.now()
 
-        driver = self.start_driver()
+        try:
+            driver = self.start_driver()
 
-        for url in urls:
-            driver.get(url)
-            self.scrape_product_page(driver)
+            for url in urls:
+                driver.get(url)
+                self.scrape_product_page(driver)
 
-        driver.quit()
+        except Exception as err:
+            print(err)
 
-        self.handle_data()
+        finally:
+            driver.quit()
+
+            self.handle_data()
 
     def get_urls_from_search_results(self, driver: WebDriver, start_page) -> List[str]:
         try:
@@ -343,3 +353,10 @@ class Tokopedia:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            print(self.data)
+            sys.stdout = open(os.devnull, 'w')
+            sys.exit(0)

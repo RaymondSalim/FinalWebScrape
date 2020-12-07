@@ -98,38 +98,50 @@ class Bukalapak:
         start_page = self.args['startpage'] or 1
         self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
 
-        driver = self.start_driver()
+        try:
 
-        url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args['query']}"
+            driver = self.start_driver()
 
-        driver.get(url)
+            url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args['query']}"
 
-        while start_page <= self.args['endpage']:
-            urls = self.get_urls_from_search_results(driver, start_page)
-            self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
+            driver.get(url)
 
-            has_next = self.next_search_page(driver)
-            if has_next == self.NEXT_PAGE_EXISTS:
-                start_page += 1
-            elif has_next == self.NEXT_PAGE_DEAD:
-                break
+            while start_page <= self.args['endpage']:
+                urls = self.get_urls_from_search_results(driver, start_page)
+                self.scrape_from_url_list(driver, urls, completed_url=completed_urls)
 
-        driver.quit()
+                has_next = self.next_search_page(driver)
+                if has_next == self.NEXT_PAGE_EXISTS:
+                    start_page += 1
+                elif has_next == self.NEXT_PAGE_DEAD:
+                    break
 
-        self.handle_data()
+        except Exception as err:
+            print(err)
+
+        finally:
+            driver.quit()
+
+            self.handle_data()
 
     def retry_errors(self, urls):
         print("Start")
         self.start_time = datetime.now()
-        driver = self.start_driver()
 
-        for url in urls:
-            driver.get(url)
-            self.scrape_product_page(driver)
+        try:
+            driver = self.start_driver()
 
-        driver.quit()
+            for url in urls:
+                driver.get(url)
+                self.scrape_product_page(driver)
 
-        self.handle_data()
+        except Exception as err:
+            print(err)
+
+        finally:
+            driver.quit()
+
+            self.handle_data()
 
     def get_urls_from_search_results(self, driver: WebDriver, start_page) -> List[str]:
         try:
@@ -310,3 +322,12 @@ class Bukalapak:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            if (len(self.data) == 0 or len(self.errors) != 0):
+                sys.exit(sc.SUCCESS_NORESULTS)
+            else:
+                print(self.data)
+                sys.exit(0)
