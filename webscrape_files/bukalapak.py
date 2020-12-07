@@ -326,9 +326,11 @@ class Bukalapak:
             handle_class.handle_retry(self.data, self.errors)
 
         elif self.args['command'] == 'scrapeurl':
-            if (len(self.data) == 0 or len(self.errors) != 0):
+            if len(self.errors) != 0:
+                sys.exit(sc.ERROR_SCRAPE)
+            elif len(self.data) == 0:
                 sys.exit(sc.SUCCESS_NORESULTS)
             else:
                 self.process = lff.LoadFromFile(args=self.args)
-                self.process.process()
+                self.process.process(data=self.data)
                 sys.exit(0)

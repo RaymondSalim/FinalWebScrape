@@ -267,7 +267,12 @@ class Tokopedia:
                 d['JUAL (UNIT TERKECIL)'] = sold_count_valid[0].text if len(sold_count_valid) > 0 else ""
 
 
-                d['HARGA UNIT TERKECIL'] = driver.find_element_by_css_selector('h3[data-testid="lblPDPDetailProductPrice"]').text
+                ori_price = driver.find_elements_by_css_selector('p[data-testid="lblPDPDetailOriginalPrice"]')
+
+                price = driver.find_elements_by_css_selector('h3[data-testid="lblPDPDetailProductPrice"]')
+
+                d['HARGA UNIT TERKECIL'] = ori_price[0].text if len(ori_price) > 0 else price[0].text
+
 
                 d['VALUE'] = ""
 
@@ -358,9 +363,11 @@ class Tokopedia:
             handle_class.handle_retry(self.data, self.errors)
 
         elif self.args['command'] == 'scrapeurl':
-            if (len(self.data) == 0 or len(self.errors) != 0):
+            if len(self.errors) != 0:
+                sys.exit(sc.ERROR_SCRAPE)
+            elif len(self.data) == 0:
                 sys.exit(sc.SUCCESS_NORESULTS)
             else:
                 self.process = lff.LoadFromFile(args=self.args)
-                self.process.process()
+                self.process.process(data=self.data)
                 sys.exit(0)
