@@ -128,7 +128,6 @@ class Tokopedia:
         self.start_time = datetime.now()
 
         try:
-
             driver = self.start_driver()
 
             for url in urls:
@@ -404,3 +403,10 @@ class Tokopedia:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            print(self.data)
+            sys.stdout = open(os.devnull, 'w')
+            sys.exit(0)

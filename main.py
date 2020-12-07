@@ -74,11 +74,27 @@ scrape_parser.add_argument('-f',
                            default='',
                            required=False)
 
+scrapeurl_parser = subparsers.add_parser('scrapeurl', help="Command to scrape URL", usage="""
+
+The following arguments are required:
+-u / --url         [REQUIRED] The URL to be scraped
+
+""")
+scrapeurl_parser.add_argument('-u',
+                              '--url',
+                              help='[REQUIRED] URL to be scraped',
+                              type=str,
+                              metavar='',
+                              required=True
+                              )
+
 retry_parser = subparsers.add_parser('retry', help="Command to retry errors from xxx_errors.json", usage="""
 
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the file containing the errors
 -r / --result           [REQUIRED] the file format for the results {csv, json}
+
+Either -f or -r has to be present
 
 """)
 retry_parser.add_argument('-f',
@@ -88,7 +104,7 @@ retry_parser.add_argument('-f',
                           metavar='',
                           required=True)
 retry_parser.add_argument('-r',
-                         '--result',
+                          '--result',
                           help='[REQUIRED] the file format for the results',
                           metavar='',
                           type=str.lower,
@@ -179,7 +195,7 @@ class Main:
 
     def check_name(self):
         query = r"^[ .]|[/<>:\"\\|?*]+|[ .]$"
-        illegal_char = re.findall(query, self.args['filename'])
+        illegal_char = re.findall(query, self.args['filename'] or '')
         if len(illegal_char) == 0:
             return
         else:
@@ -209,7 +225,7 @@ class Main:
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{self.args['command']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
+                self.args['filename'] = f"{self.args['query']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
 
             else:
                 if self.args['command'] != 'scrape':
@@ -224,42 +240,51 @@ class Main:
 
 
     def main(self):
-        # pass
-        self.clear_console()
         try:
-            if self.args['command'] == 'scrape':
-                # scrape
-                if self.args['marketplace'].lower() == 'tokopedia':
-                    self.process = tokopedia.Tokopedia(self.args)
-                    self.process.start_scrape()
+            if self.args['command'] == 'scrapeurl':
+                # f = open(os.devnull, 'w')
+                # sys.stdout = f
 
-                elif self.args['marketplace'].lower() == 'bukalapak':
-                    self.process = bukalapak.Bukalapak(self.args)
-                    self.process.start_scrape()
-
-                elif self.args['marketplace'].lower() == 'shopee':
-                    self.process = shopee.Shopee(self.args)
-                    self.process.start_scrape()
-
-            elif self.args['command'] == 'continue':
-                path = self.get_final_path()
-                self.process = lff.LoadFromFile(path=path, args=self.args)
-                self.process.continue_scrape()
-
-            elif self.args['command'] == 'retry':
-                path = self.get_final_path()
-                self.process = lff.LoadFromFile(path=path, args=self.args)
-                self.process.retry()
-
-            elif self.args['command'] == 'convert':
-                path = self.get_final_path()
-                self.args['result'] = ''
-                self.process = lff.LoadFromFile(path=path, args=self.args)
-                self.process.convert()
-
+                self.process = lff.LoadFromFile(args=self.args)
+                self.process.retry(urls=[self.args['url']])
 
             else:
-                sys.exit(sc.ERROR_ARGUMENT)
+                self.clear_console()
+
+                if self.args['command'] == 'scrape':
+                    # scrape
+                    if self.args['marketplace'].lower() == 'tokopedia':
+                        self.process = tokopedia.Tokopedia(self.args)
+                        self.process.start_scrape()
+
+                    elif self.args['marketplace'].lower() == 'bukalapak':
+                        self.process = bukalapak.Bukalapak(self.args)
+                        self.process.start_scrape()
+
+                    elif self.args['marketplace'].lower() == 'shopee':
+                        self.process = shopee.Shopee(self.args)
+                        self.process.start_scrape()
+
+                elif self.args['command'] == 'continue':
+                    path = self.get_final_path()
+                    self.process = lff.LoadFromFile(path=path, args=self.args)
+                    self.process.continue_scrape()
+
+                elif self.args['command'] == 'retry':
+                    path = self.get_final_path()
+
+                    self.process = lff.LoadFromFile(path=path, args=self.args)
+                    self.process.retry()
+
+                elif self.args['command'] == 'convert':
+                    path = self.get_final_path()
+                    self.args['result'] = ''
+                    self.process = lff.LoadFromFile(path=path, args=self.args)
+                    self.process.convert()
+
+
+                else:
+                    sys.exit(sc.ERROR_ARGUMENT)
         except (NewConnectionError, HTTPException):
             sys.exit(sc.ERROR_GENERAL)
             pass

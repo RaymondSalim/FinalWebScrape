@@ -11,18 +11,19 @@ class LoadFromFile:
         self.args = args
         self.data = []
         self.errors = []
-        self.result = args['result'] or ""
+        self.result = args.get('result', False) or ""
         self.check_file()
 
     def check_file(self):
-        if "csv" in self.path[-4::]:
-            self.filetype = "csv"
+        if self.args['command'] != 'scrapeurl':
+            if "csv" in self.path[-4::]:
+                self.filetype = "csv"
 
-        elif "json" in self.path[-4::]:
-            self.filetype = "json"
+            elif "json" in self.path[-4::]:
+                self.filetype = "json"
 
-        else:
-            sys.exit(sc.ERROR_GENERAL)
+            else:
+                sys.exit(sc.ERROR_GENERAL)
 
     def load_file(self):
         try:
@@ -74,8 +75,8 @@ class LoadFromFile:
             self.errors = self.process.errors
             self.process.continue_scrape(urls)
 
-    def retry(self):
-        urls = self.load_file()
+    def retry(self, urls=None):
+        urls = urls or self.load_file()
         self.args['query'] = ''
         if "tokopedia" in urls[0]:
             self.process = tokopedia.Tokopedia(self.args)
@@ -97,6 +98,8 @@ class LoadFromFile:
             self.errors = self.process.errors
             self.ID = "shopee"
             self.process.retry_errors(urls)
+        else:
+            sys.exit(sc.ERROR_GENERAL)
 
     def convert(self):
         data = self.load_file()

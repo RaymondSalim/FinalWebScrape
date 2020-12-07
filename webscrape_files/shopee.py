@@ -238,7 +238,10 @@ class Shopee:
             for loc in info:
                 if "Dikirim Dari".casefold() in loc.text.casefold():
                     location = loc.text
-            location = location.replace("Dikirim Dari", "").replace('\n', '') if location is not None else "International"
+            if location is not None:
+                location = location.replace("Dikirim Dari", "").replace('\n', '')
+            else:
+                raise Exception("Location Not Found")
             d['ALAMAT'] = location
 
             kota = None
@@ -425,3 +428,10 @@ class Shopee:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            print(self.data)
+            sys.stdout = open(os.devnull, 'w')
+            sys.exit(0)

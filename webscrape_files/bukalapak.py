@@ -6,6 +6,7 @@ from datetime import datetime
 from selenium import webdriver
 from webscrape_files.handle_result import HandleResult
 from . import city_list as cl
+from . import status_codes as sc
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -370,3 +371,12 @@ class Bukalapak:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            if (len(self.data) == 0 or len(self.errors) != 0):
+                sys.exit(sc.SUCCESS_NORESULTS)
+            else:
+                print(self.data)
+                sys.exit(0)
