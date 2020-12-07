@@ -208,7 +208,7 @@ class Main:
         if len(illegal_char) == 0:
             return
         else:
-            print(f"filename contains illegal characters:\n {illegal_char}\n replacing with \"_\"")
+            print(f"filename contains illegal characters:\n {illegal_char}\n replacing with \"_\"", flush=True)
             self.args['filename'] = re.sub(query, "", self.args['filename'])
 
     def clear_console(self):
@@ -241,7 +241,7 @@ class Main:
                     self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + f"_{self.args['command']}"
 
 
-            print("Process is interrupted, results might not be complete")
+            print("Process is interrupted, results might not be complete", flush=True)
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_scrape(data, errors)
         else:
@@ -316,7 +316,7 @@ class Main:
             except AttributeError:
                 pass
             finally:
-                print(err)
+                print(err, flush=True)
                 self.handle_sigint(None, None)
 
 

@@ -41,8 +41,8 @@ class LoadFromFile:
 
             return data
         except FileNotFoundError as err:
-            print(err)
-            print("File not found")
+            print(err, flush=True)
+            print("File not found", flush=True)
             sys.exit(sc.ERROR_GENERAL)
 
     def load_urls_from_scraped_file(self, data):

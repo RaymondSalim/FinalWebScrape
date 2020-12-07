@@ -19,7 +19,7 @@ class Shopee:
             clean = self.process_row(data)
             self.clean_data.append(clean)
 
-        print(f"{duplicates} Duplicates skipped")
+        print(f"{duplicates} Duplicates skipped", flush=True)
         return self.clean_data
 
     def process_row(self, data):

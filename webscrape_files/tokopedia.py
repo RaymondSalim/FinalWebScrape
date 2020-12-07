@@ -48,7 +48,7 @@ class Tokopedia:
         driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
         self.driver = driver
 
-        print(f"Browser PID: {driver.service.process.pid}")
+        print(f"Browser PID: {driver.service.process.pid}", flush=True)
 
         self.wait = WebDriverWait(driver, self.timeout_limit)
 
@@ -61,7 +61,7 @@ class Tokopedia:
             os.system('clear')
 
     def start_scrape(self):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
@@ -84,7 +84,7 @@ class Tokopedia:
                 elif has_next == self.NEXT_PAGE_DEAD:
                     break
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -92,7 +92,7 @@ class Tokopedia:
             self.handle_data()
 
     def continue_scrape(self, completed_urls):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
@@ -116,7 +116,7 @@ class Tokopedia:
                     break
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -125,7 +125,7 @@ class Tokopedia:
 
 
     def retry_errors(self, urls):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         try:
@@ -136,7 +136,7 @@ class Tokopedia:
                 self.scrape_product_page(driver)
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -147,13 +147,13 @@ class Tokopedia:
         try:
             has_results = driver.find_element_by_css_selector('button[data-testid="btnSRPChangeKeyword"]').text
             if "Ganti kata kunci" in has_results:
-                print("Tidak ada hasil")
+                print("Tidak ada hasil", flush=True)
                 return []
         except NoSuchElementException:
             pass
 
         finally:
-            print(f"Page {start_page}")
+            print(f"Page {start_page}", flush=True)
             search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
             products = search_results.find_elements_by_class_name('pcv3__info-content')
             list_of_url = []
@@ -163,14 +163,14 @@ class Tokopedia:
                     product_url = product.get_attribute('href')
                     list_of_url.append(product_url)
                 except Exception as err:
-                    print(f"Error in def get_urls_from_search_results\n{err}")
+                    print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
 
             return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
             if any(completed in product for completed in completed_url):
-                print("Item skipped")
+                print("Item skipped", flush=True)
                 continue
 
             # Opens a new tab
@@ -195,7 +195,7 @@ class Tokopedia:
             self.wait.until_not(ec.url_contains("ta.tokopedia"))
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
             self.errors.append(driver.current_url)
             return
 
@@ -204,8 +204,8 @@ class Tokopedia:
                 ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div[data-testid="pdpDescriptionContainer"]'), ""),
                 "pdpDescriptionContainer not found")
         except Exception as err:
-            print(err)
-            print("timed out, skipping")
+            print(err, flush=True)
+            print("timed out, skipping" ,flush=True)
             self.errors.append(driver.current_url)
             return
 
@@ -308,13 +308,13 @@ class Tokopedia:
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             except Exception as err:
-                print(err)
+                print(err, flush=True)
                 self.errors.append(driver.current_url)
 
             else:
                 self.data.append(d)
                 self.scraped_count += 1
-                print(f"    Item #{self.scraped_count} completed")
+                print(f"    Item #{self.scraped_count} completed", flush=True)
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
@@ -322,7 +322,7 @@ class Tokopedia:
             next_button = driver.find_element_by_css_selector('button[aria-label="Halaman berikutnya"]')
 
             if next_button.is_enabled():
-                print("Next page")
+                print("Next page", flush=True)
                 next_button.click()
 
                 self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'pcv3__info-content')),
@@ -333,7 +333,7 @@ class Tokopedia:
                 return self.NEXT_PAGE_DEAD
 
         except TimeoutException as err:
-            print(err)
+            print(err, flush=True)
             return self.NEXT_PAGE_DEAD
 
         except NoSuchElementException as err:
@@ -341,7 +341,7 @@ class Tokopedia:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("Time taken: " + end_time)
+        print("Time taken: " + end_time, flush=True)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':

@@ -48,7 +48,7 @@ class Shopee:
         driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
         self.driver = driver
 
-        print(f"Browser PID: {driver.service.process.pid}")
+        print(f"Browser PID: {driver.service.process.pid}", flush=True)
 
         self.wait = WebDriverWait(driver, self.timeout_limit)
 
@@ -61,7 +61,7 @@ class Shopee:
             os.system('clear')
 
     def start_scrape(self):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
@@ -84,7 +84,7 @@ class Shopee:
                 elif has_next == self.NEXT_PAGE_DEAD:
                     break
         except Exception as err:
-            print(err)
+            print(err, flush=True)
             driver.quit()
 
         finally:
@@ -93,7 +93,7 @@ class Shopee:
             self.handle_data()
 
     def continue_scrape(self, completed_urls):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
@@ -118,7 +118,7 @@ class Shopee:
                     break
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -126,7 +126,7 @@ class Shopee:
             self.handle_data()
 
     def retry_errors(self, urls):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         try:
@@ -137,7 +137,7 @@ class Shopee:
                 self.scrape_product_page(driver)
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -148,7 +148,7 @@ class Shopee:
         try:
             has_results = driver.find_element_by_css_selector('div[class="shopee-search-result-header__text"]').text
             if "Kami tidak dapat menemukan" in has_results:
-                print("Tidak ada hasil")
+                print("Tidak ada hasil", flush=True)
                 return []
         except NoSuchElementException:
             pass
@@ -161,7 +161,7 @@ class Shopee:
                 return []
 
             else:
-                print(f"Page {start_page}")
+                print(f"Page {start_page}", flush=True)
                 search_results = driver.find_element_by_css_selector(
                     'div[class="row shopee-search-item-result__items"]')
                 products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
@@ -173,14 +173,14 @@ class Shopee:
                         product_url = product.find_element_by_tag_name('a').get_attribute('href')
                         list_of_url.append(product_url)
                     except Exception as err:
-                        print(f"Error in def get_urls_from_search_results\n{err}")
+                        print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
 
                 return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
             if product in completed_url or any(completed in product for completed in completed_url):
-                print("Item skipped")
+                print("Item skipped", flush=True)
                 continue
 
             # Opens a new tab
@@ -207,7 +207,7 @@ class Shopee:
             self.wait.until(ec.text_to_be_present_in_element((By.CLASS_NAME, 'qaNIZv'), ""), "Title not found")
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
             self.errors.append(driver.current_url)
             return
 
@@ -327,13 +327,13 @@ class Shopee:
             d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
             self.errors.append(driver.current_url)
 
         else:
             self.data.append(d)
             self.scraped_count += 1
-            print(f"    Item #{self.scraped_count} completed")
+            print(f"    Item #{self.scraped_count} completed", flush=True)
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
@@ -342,7 +342,7 @@ class Shopee:
                 'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')
 
             if next_button.is_enabled():
-                print("Next page")
+                print("Next page", flush=True)
                 next_button.click()
                 self.wait.until(ec.presence_of_element_located(
                     (By.CSS_SELECTOR, 'div.shopee-search-item-result__item')),
@@ -352,7 +352,7 @@ class Shopee:
                 return self.NEXT_PAGE_DEAD
 
         except TimeoutException as err:
-            print(err)
+            print(err, flush=True)
             return self.NEXT_PAGE_DEAD
 
         except NoSuchElementException as err:
@@ -360,7 +360,7 @@ class Shopee:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("Time taken: " + end_time)
+        print("Time taken: " + end_time, flush=True)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':

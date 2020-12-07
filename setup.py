@@ -71,7 +71,7 @@ def check_status():
                 if "command not found".casefold() in str(err).casefold() or "No such file".casefold() in str(err).casefold():
                     print("Google chrome not found, please ensure you have google chrome installed")
                 else:
-                    print(err)
+                    print(err, flush=True)
                 sys.exit(-1)
 
         elif not pip_success:

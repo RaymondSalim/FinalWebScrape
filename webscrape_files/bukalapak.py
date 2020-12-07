@@ -49,7 +49,7 @@ class Bukalapak:
         driver = webdriver.Chrome(self.driver_dir, options=chrome_options)
         self.driver = driver
 
-        print(f"Browser PID: {driver.service.process.pid}")
+        print(f"Browser PID: {driver.service.process.pid}", flush=True)
 
         self.wait = WebDriverWait(driver, self.timeout_limit)
 
@@ -62,7 +62,7 @@ class Bukalapak:
             os.system('clear')
 
     def start_scrape(self):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
@@ -85,7 +85,7 @@ class Bukalapak:
                 elif has_next == self.NEXT_PAGE_DEAD:
                     break
         except Exception as err:
-            print(err)
+            print(err, flush=True)
             driver.quit()
 
         finally:
@@ -94,7 +94,7 @@ class Bukalapak:
             self.handle_data()
 
     def continue_scrape(self, completed_urls):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
@@ -119,7 +119,7 @@ class Bukalapak:
                     break
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -127,7 +127,7 @@ class Bukalapak:
             self.handle_data()
 
     def retry_errors(self, urls):
-        print("Start")
+        print("Start", flush=True)
         self.start_time = datetime.now()
 
         try:
@@ -138,7 +138,7 @@ class Bukalapak:
                 self.scrape_product_page(driver)
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
 
         finally:
             driver.quit()
@@ -149,7 +149,7 @@ class Bukalapak:
         try:
             has_results = driver.find_element_by_css_selector('p[class="mb-8 bl-text bl-text--subheading-1"]').text
             if "Maaf, barangnya tidak ketemu" in has_results:
-                print("Tidak ada hasil")
+                print("Tidak ada hasil", flush=True)
                 return []
         except NoSuchElementException:
             pass
@@ -164,7 +164,7 @@ class Bukalapak:
                 return []
 
             else:
-                print(f"Page {start_page}")
+                print(f"Page {start_page}", flush=True)
                 products = driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
 
                 list_of_url = []
@@ -174,14 +174,14 @@ class Bukalapak:
                         product_url = product.find_element_by_tag_name('a').get_attribute('href')
                         list_of_url.append(product_url)
                     except Exception as err:
-                        print(f"Error in def get_urls_from_search_results\n{err}")
+                        print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
 
                 return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
             if any(completed in product for completed in completed_url):
-                print("Item skipped")
+                print("Item skipped", flush=True)
                 continue
 
             # Opens a new tab
@@ -207,7 +207,7 @@ class Bukalapak:
                             "Page timeout")
 
         except Exception as err:
-            print(err)
+            print(err, flush=True)
             self.errors.append(driver.current_url)
             return
 
@@ -276,27 +276,27 @@ class Bukalapak:
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             except Exception as err:
-                print(err)
+                print(err, flush=True)
                 self.errors.append(driver.current_url)
 
             else:
                 self.data.append(d)
                 self.scraped_count += 1
-                print(f"    Item #{self.scraped_count} completed")
+                print(f"    Item #{self.scraped_count} completed", flush=True)
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
             next_button = driver.find_element_by_css_selector("a[class*='pagination__next']")
 
             if next_button.is_enabled():
-                print("Next page")
+                print("Next page", flush=True)
                 next_button.click()
                 return self.NEXT_PAGE_EXISTS
             else:
                 return self.NEXT_PAGE_DEAD
 
         except TimeoutException as err:
-            print(err)
+            print(err, flush=True)
             return self.NEXT_PAGE_DEAD
 
         except NoSuchElementException:
@@ -304,7 +304,7 @@ class Bukalapak:
 
     def handle_data(self):
         end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
-        print("Time taken: " + end_time)
+        print("Time taken: " + end_time, flush=True)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':

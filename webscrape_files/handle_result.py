@@ -52,22 +52,22 @@ class HandleResult:
                     dict_writer.writeheader()
                     dict_writer.writerows(data)
 
-                print(f"Saved to {path}")
+                # print(f"Saved to {path}")
 
             except Exception as err:
-                print(err)
-                print("\nSaving error occured, saving as json instead")
+                print(err, flush=True)
+                print("\nSaving error occured, saving as json instead", flush=True)
 
                 with open(path.replace('.csv', '.json'), 'w') as outFile:
                     json.dump(data, outFile)
 
-                print(f"Saved to {path.replace('.csv', '.json')}")
+                # print(f"Saved to {path.replace('.csv', '.json')}")
 
             finally:
                 self.save_errors(path, errors)
 
         else:
-            print("Nothing scraped")
+            print("Nothing scraped", flush=True)
             sys.exit(sc.SUCCESS_NORESULTS)
 
     def save_json(self, path, data, errors):
@@ -76,11 +76,11 @@ class HandleResult:
                 with open(path, 'w') as outFile:
                     json.dump(data, outFile)
 
-                print(f"Saved to {path}")
+                # print(f"Saved to {path}")
 
             except Exception as err:
-                print(err)
-                print("\nSaving error occured, saving as csv instead")
+                print(err, flush=True)
+                print("\nSaving error occured, saving as csv instead", flush=True)
                 keys = data[0].keys()
 
                 with open(path.replace('.json', '.csv'), 'w', newline='', encoding='utf-8') as csvFile:
@@ -92,7 +92,7 @@ class HandleResult:
                 self.save_errors(path, errors)
 
         else:
-            print("Nothing scraped")
+            print("Nothing scraped", flush=True)
             sys.exit(sc.SUCCESS_NORESULTS)
 
     def save_errors(self, path, errors):
@@ -136,7 +136,7 @@ class HandleResult:
         if self.scrapeurl:
             import sys
             sys.stdout = sys.__stdout__
-            print(data)
+            print(data, flush=True)
             sys.exit(sc.SUCCESS_COMPLETE)
         if "json" in self.file_path:
             fp = self.file_path.replace('.json', '_processed.json')
