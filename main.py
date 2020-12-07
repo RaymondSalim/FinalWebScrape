@@ -253,8 +253,8 @@ class Main:
         # self.clear_console()
         try:
             if self.args['command'] == 'scrapeurl':
-                # f = open(os.devnull, 'w')
-                # sys.stdout = f
+                f = open(os.devnull, 'w')
+                sys.stdout = f
 
                 self.process = lff.LoadFromFile(args=self.args)
                 self.process.retry(urls=[self.args['url']])
