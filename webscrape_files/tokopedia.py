@@ -1,8 +1,11 @@
 import os
 import platform
+import sys
 from typing import List
 from datetime import datetime
 from selenium import webdriver
+from . import status_codes as sc
+from webscrape_files import load_from_file as lff
 from webscrape_files.handle_result import HandleResult
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -355,8 +358,9 @@ class Tokopedia:
             handle_class.handle_retry(self.data, self.errors)
 
         elif self.args['command'] == 'scrapeurl':
-            import sys
-            sys.stdout = sys.__stdout__
-            print(self.data)
-            sys.stdout = open(os.devnull, 'w')
-            sys.exit(0)
+            if (len(self.data) == 0 or len(self.errors) != 0):
+                sys.exit(sc.SUCCESS_NORESULTS)
+            else:
+                self.process = lff.LoadFromFile(args=self.args)
+                self.process.process()
+                sys.exit(0)

@@ -10,11 +10,13 @@ class HandleResult:
     def __init__(self,
                  file_name=None,
                  file_type=None,
-                 file_path=None
+                 file_path=None,
+                 scrapeurl=False
                  ):
         self.file_name = file_name
         self.file_type = file_type
         self.file_path = file_path
+        self.scrapeurl = scrapeurl
         operating_system = platform.system()
 
         self.output_dir = str(os.path.dirname(os.path.realpath(__file__)))
@@ -131,6 +133,11 @@ class HandleResult:
             self.save_csv(file_path, data, errors=[])
 
     def handle_process(self, data):
+        if self.scrapeurl:
+            import sys
+            sys.stdout = sys.__stdout__
+            print(data)
+            sys.exit(sc.SUCCESS_COMPLETE)
         if "json" in self.file_path:
             fp = self.file_path.replace('.json', '_processed.json')
             self.save_json(fp, data, errors=[])

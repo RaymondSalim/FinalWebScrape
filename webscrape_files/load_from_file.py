@@ -106,8 +106,8 @@ class LoadFromFile:
         hr = handle_result.HandleResult(file_path=self.path)
         hr.handle_convert(data)
 
-    def process(self):
-        data = self.load_file()
+    def process(self, data=None):
+        data = data or self.load_file()
         self.marketplace = data[0]['E-COMMERCE']
 
         if self.marketplace.casefold() == 'tokopedia'.casefold():
@@ -120,6 +120,6 @@ class LoadFromFile:
             self.process = proc_bl.Bukalapak(data)
 
         clean_data = self.process.process()
-        hr = handle_result.HandleResult(file_path=self.path)
+        hr = handle_result.HandleResult(file_path=self.path, scrapeurl=True if self.args['command'] == 'scrapeurl' else False)
         hr.handle_process(clean_data)
         

@@ -4,7 +4,8 @@ from typing import List
 from datetime import datetime
 from selenium import webdriver
 from webscrape_files.handle_result import HandleResult
-from . import city_list as cl
+from . import status_codes as sc
+from webscrape_files import load_from_file as lff
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -385,3 +386,11 @@ class Shopee:
             print(self.data)
             sys.stdout = open(os.devnull, 'w')
             sys.exit(0)
+
+        elif self.args['command'] == 'scrapeurl':
+            if (len(self.data) == 0 or len(self.errors) != 0):
+                sys.exit(sc.SUCCESS_NORESULTS)
+            else:
+                self.process = lff.LoadFromFile(args=self.args)
+                self.process.process()
+                sys.exit(0)
