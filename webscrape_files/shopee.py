@@ -241,7 +241,7 @@ class Shopee:
             if location is not None:
                 location = location.replace("Dikirim Dari", "").replace('\n', '')
             else:
-                raise Exception("Location Not Found")
+                location = "Location Not Found"
             d['ALAMAT'] = location
 
             kota = None
