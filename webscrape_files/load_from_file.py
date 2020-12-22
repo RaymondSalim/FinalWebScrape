@@ -107,17 +107,17 @@ class LoadFromFile:
         hr.handle_convert(data)
 
     def process(self, data=None):
-        data = data or self.load_file()
-        self.marketplace = data[0]['E-COMMERCE']
+        dirty_data = data or self.load_file()
+        self.marketplace = dirty_data[0]['E-COMMERCE']
 
         if self.marketplace.casefold() == 'tokopedia'.casefold():
-            self.process = proc_tp.Tokopedia(data)
+            self.process = proc_tp.Tokopedia(dirty_data)
 
         elif self.marketplace.casefold() == 'shopee'.casefold():
-            self.process = proc_shopee.Shopee(data)
+            self.process = proc_shopee.Shopee(dirty_data)
 
         elif self.marketplace.casefold() == 'bukalapak'.casefold():
-            self.process = proc_bl.Bukalapak(data)
+            self.process = proc_bl.Bukalapak(dirty_data)
 
         clean_data = self.process.process()
         hr = handle_result.HandleResult(file_path=self.path, scrapeurl=True if self.args['command'] == 'scrapeurl' else False)

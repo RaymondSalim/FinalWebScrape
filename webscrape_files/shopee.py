@@ -382,10 +382,8 @@ class Shopee:
             handle_class.handle_retry(self.data, self.errors)
 
         elif self.args['command'] == 'scrapeurl':
-            import sys
-            sys.stdout = sys.__stdout__
             if (len(self.data) == 0 or len(self.errors) != 0):
                 sys.exit(sc.SUCCESS_NORESULTS)
             else:
-                print(self.data, flush=True)
-                sys.exit(0)
+                lf = lff.LoadFromFile(args=self.args)
+                lf.process(self.data)
