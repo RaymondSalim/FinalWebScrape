@@ -311,7 +311,7 @@ class Bukalapak:
             return self.NEXT_PAGE_DEAD
 
     def handle_data(self):
-        end_time = str(datetime.now() - self.start_time).replace(':', '-')
+        end_time = str(datetime.now() - self.start_time)
         print("Time taken: " + end_time, flush=True)
 
         if self.args['command'] == "scrape":
