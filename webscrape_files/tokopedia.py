@@ -152,20 +152,19 @@ class Tokopedia:
         except NoSuchElementException:
             pass
 
-        finally:
-            print(f"Page {start_page}", flush=True)
-            search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
-            products = search_results.find_elements_by_class_name('pcv3__info-content')
-            list_of_url = []
+        print(f"Page {start_page}", flush=True)
+        search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
+        products = search_results.find_elements_by_class_name('pcv3__info-content')
+        list_of_url = []
 
-            for product in products:
-                try:
-                    product_url = product.get_attribute('href')
-                    list_of_url.append(product_url)
-                except Exception as err:
-                    print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+        for product in products:
+            try:
+                product_url = product.get_attribute('href')
+                list_of_url.append(product_url)
+            except Exception as err:
+                print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
 
-            return list_of_url
+        return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
