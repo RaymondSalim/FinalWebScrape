@@ -225,7 +225,7 @@ class Main:
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{id}_{str(datetime.now()).replace(':', '꞉')}"
+                self.args['filename'] = f"{self.args['query']}_{id}_{str(datetime.now()).replace(':', '-')}"
 
             else:
                 if self.args['command'] != 'scrape':

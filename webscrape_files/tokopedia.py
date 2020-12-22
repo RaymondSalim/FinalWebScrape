@@ -382,13 +382,13 @@ class Tokopedia:
             return self.NEXT_PAGE_DEAD
 
     def handle_data(self):
-        end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
+        end_time = str(datetime.now() - self.start_time).replace(':', '-')
         print("Time taken: " + end_time)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
-                self.args['filename'] = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '꞉')}"
+                self.args['filename'] = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '-')}"
 
             else:
                 self.args['filename'] = self.args['filename']
