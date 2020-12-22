@@ -160,29 +160,29 @@ class Bukalapak:
         except NoSuchElementException:
             pass
 
-        finally:
-            try:
-                self.wait.until(
-                    ec.presence_of_element_located((By.XPATH, '//div[@class="bl-product-card__thumbnail"]//*//a')),
-                    "No items found on this page")
 
-            except:
-                return []
+        try:
+            self.wait.until(
+                ec.presence_of_element_located((By.XPATH, '//div[@class="bl-product-card__thumbnail"]//*//a')),
+                "No items found on this page")
 
-            else:
-                print(f"Page {start_page}")
-                products = driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
+        except:
+            return []
 
-                list_of_url = []
+        else:
+            print(f"Page {start_page}", flush=True)
+            products = driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
 
-                for product in products:
-                    try:
-                        product_url = product.find_element_by_tag_name('a').get_attribute('href')
-                        list_of_url.append(product_url)
-                    except Exception as err:
-                        print(f"Error in def get_urls_from_search_results\n{err}")
+            list_of_url = []
 
-                return list_of_url
+            for product in products:
+                try:
+                    product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                    list_of_url.append(product_url)
+                except Exception as err:
+                    print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+
+            return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:

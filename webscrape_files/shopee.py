@@ -152,29 +152,29 @@ class Shopee:
         except NoSuchElementException:
             pass
 
-        finally:
-            try:
-                self.wait.until(ec.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
-            except:
-                return []
 
-            else:
-                print(f"Page {start_page}")
-                search_results = driver.find_element_by_css_selector(
-                    'div[class="row shopee-search-item-result__items"]')
-                products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+        try:
+            self.wait.until(ec.presence_of_element_located(
+                (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
+        except:
+            return []
 
-                list_of_url = []
+        else:
+            print(f"Page {start_page}", flush=True)
+            search_results = driver.find_element_by_css_selector(
+                'div[class="row shopee-search-item-result__items"]')
+            products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
 
-                for product in products:
-                    try:
-                        product_url = product.find_element_by_tag_name('a').get_attribute('href')
-                        list_of_url.append(product_url)
-                    except Exception as err:
-                        print(f"Error in def get_urls_from_search_results\n{err}")
+            list_of_url = []
 
-                return list_of_url
+            for product in products:
+                try:
+                    product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                    list_of_url.append(product_url)
+                except Exception as err:
+                    print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+
+            return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
