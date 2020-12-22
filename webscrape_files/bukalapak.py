@@ -66,7 +66,11 @@ class Bukalapak:
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
-        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
+
+        # Max page is limited to 100 as pages > 100 are duplicates of page 100
+        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 100
+        if self.args['endpage'] > 100:
+            self.args['endpage'] = 100
 
         url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args['query_parsed']}"
 
@@ -98,7 +102,11 @@ class Bukalapak:
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
-        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
+
+        # Max page is limited to 100 as pages > 100 are duplicates of page 100
+        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 100
+        if self.args['endpage'] > 100:
+            self.args['endpage'] = 100
 
         try:
 

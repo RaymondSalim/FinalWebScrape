@@ -20,8 +20,10 @@ def get_url(version):
         return 'https://chromedriver.storage.googleapis.com/85.0.4183.87/'
     elif "86" == version:
         return 'https://chromedriver.storage.googleapis.com/86.0.4240.22/'
-    elif "86" == version:
+    elif "87" == version:
         return 'https://chromedriver.storage.googleapis.com/87.0.4280.20/'
+    elif "88" == version:
+        return 'https://chromedriver.storage.googleapis.com/88.0.4324.27/'
 
 
 def extract_zip():
