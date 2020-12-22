@@ -407,8 +407,8 @@ class Shopee:
             return self.NEXT_PAGE_DEAD
 
     def handle_data(self):
-        end_time = str(datetime.now() - self.start_time).replace(':', '-')
-        print("Time taken: " + end_time)
+        end_time = str(datetime.now() - self.start_time)
+        print("Time taken: " + end_time, flush=True)
 
         if self.args['command'] == "scrape":
             if self.args['filename'] == '':
