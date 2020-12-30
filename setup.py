@@ -20,8 +20,10 @@ def get_url(version):
         return 'https://chromedriver.storage.googleapis.com/85.0.4183.87/'
     elif "86" == version:
         return 'https://chromedriver.storage.googleapis.com/86.0.4240.22/'
-    elif "86" == version:
+    elif "87" == version:
         return 'https://chromedriver.storage.googleapis.com/87.0.4280.20/'
+    elif "88" == version:
+        return 'https://chromedriver.storage.googleapis.com/88.0.4324.27/'
 
 
 def extract_zip():
@@ -55,7 +57,7 @@ def check_status():
         print("*********************")
 
         if str(operating_system) != 'Windows':
-            print("\nPlease mark chromedriver as executable with the following:\n\n\n    sudo chmod +x " + new_path + "chromedriver\n\n\n")
+            print("\nPlease mark chromedriver as executable with the following:\n\n\n    sudo chmod +x " + new_path + "chromedriver\n\n")
 
         sys.exit(0)
 
@@ -91,11 +93,11 @@ if str(operating_system) == 'Windows':
 
     pattern = "[0-9.]+"
     version = (re.findall(pattern, version))[0]
-    
+
     if "No" not in version and len(version) != 0:
         dl_url = get_url(version) + 'chromedriver_win32.zip'
 
-        subprocess.run(['curl', dl_url, '--output', 'cd.zip'])
+        subprocess.run(['curl', '-#', dl_url, '--output', 'cd.zip'])
 
         new_path = driver_path + '\\Files\\'
 
@@ -123,7 +125,7 @@ else:
         version = proc2.stdout.decode('utf-8')
         dl_url = get_url(version) + 'chromedriver_linux64.zip'
 
-        subprocess.run(['curl', dl_url, '--output', 'cd.zip'])
+        subprocess.run(['curl', '-#', dl_url, '--output', 'cd.zip'])
 
         new_path = driver_path + '/Files/'
 

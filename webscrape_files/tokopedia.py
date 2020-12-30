@@ -129,7 +129,6 @@ class Tokopedia:
         self.start_time = datetime.now()
 
         try:
-
             driver = self.start_driver()
 
             for url in urls:
@@ -153,20 +152,19 @@ class Tokopedia:
         except NoSuchElementException:
             pass
 
-        finally:
-            print(f"{self.ID} {self.args['query']} Page {start_page}")
-            search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
-            products = search_results.find_elements_by_class_name('pcv3__info-content')
-            list_of_url = []
+        print(f"Page {start_page}", flush=True)
+        search_results = driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
+        products = search_results.find_elements_by_class_name('pcv3__info-content')
+        list_of_url = []
 
-            for product in products:
-                try:
-                    product_url = product.get_attribute('href')
-                    list_of_url.append(product_url)
-                except Exception as err:
-                    print(f"Error in def get_urls_from_search_results\n{err}")
+        for product in products:
+            try:
+                product_url = product.get_attribute('href')
+                list_of_url.append(product_url)
+            except Exception as err:
+                print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
 
-            return list_of_url
+        return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
@@ -384,7 +382,7 @@ class Tokopedia:
             return self.NEXT_PAGE_DEAD
 
     def handle_data(self):
-        end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
+        end_time = str(datetime.now() - self.start_time)
         print(f"{self.ID} {self.args['query']} iTime taken: " + end_time)
 
         if self.args['command'] == "scrape":
@@ -405,3 +403,10 @@ class Tokopedia:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            print(self.data)
+            sys.stdout = open(os.devnull, 'w')
+            sys.exit(0)

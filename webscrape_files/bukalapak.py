@@ -6,6 +6,7 @@ from datetime import datetime
 from selenium import webdriver
 from webscrape_files.handle_result import HandleResult
 from . import city_list as cl
+from . import status_codes as sc
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -65,7 +66,11 @@ class Bukalapak:
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
-        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
+
+        # Max page is limited to 100 as pages > 100 are duplicates of page 100
+        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 100
+        if self.args['endpage'] > 100:
+            self.args['endpage'] = 100
 
         url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args['query_parsed']}"
 
@@ -97,8 +102,11 @@ class Bukalapak:
         self.start_time = datetime.now()
 
         start_page = self.args['startpage'] or 1
-        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 9999
 
+        # Max page is limited to 100 as pages > 100 are duplicates of page 100
+        self.args['endpage'] = self.args['endpage'] if self.args['endpage'] != 0 else 100
+        if self.args['endpage'] > 100:
+            self.args['endpage'] = 100
         try:
 
             driver = self.start_driver()
@@ -153,29 +161,29 @@ class Bukalapak:
         except NoSuchElementException:
             pass
 
-        finally:
-            try:
-                self.wait.until(
-                    ec.presence_of_element_located((By.XPATH, '//div[@class="bl-product-card__thumbnail"]//*//a')),
-                    "No items found on this page")
 
-            except:
-                return []
+        try:
+            self.wait.until(
+                ec.presence_of_element_located((By.XPATH, '//div[@class="bl-product-card__thumbnail"]//*//a')),
+                "No items found on this page")
 
-            else:
-                print(f"{self.ID} {self.args['query']} Page {start_page}")
-                products = driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
+        except:
+            return []
 
-                list_of_url = []
+        else:
+            print(f"Page {start_page}", flush=True)
+            products = driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
 
-                for product in products:
-                    try:
-                        product_url = product.find_element_by_tag_name('a').get_attribute('href')
-                        list_of_url.append(product_url)
-                    except Exception as err:
-                        print(f"Error in def get_urls_from_search_results\n{err}")
+            list_of_url = []
 
-                return list_of_url
+            for product in products:
+                try:
+                    product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                    list_of_url.append(product_url)
+                except Exception as err:
+                    print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+
+            return list_of_url
 
     def scrape_from_url_list(self, driver: WebDriver, urls: List[str], completed_url=[]):
         for product in urls:
@@ -350,7 +358,7 @@ class Bukalapak:
             return self.NEXT_PAGE_DEAD
 
     def handle_data(self):
-        end_time = str(datetime.now() - self.start_time).replace(':', '꞉')
+        end_time = str(datetime.now() - self.start_time)
         print(f"{self.ID} {self.args['query']} Time taken: " + end_time)
 
         if self.args['command'] == "scrape":
@@ -371,3 +379,12 @@ class Bukalapak:
         elif self.args['command'] == "retry":
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
             handle_class.handle_retry(self.data, self.errors)
+
+        elif self.args['command'] == 'scrapeurl':
+            import sys
+            sys.stdout = sys.__stdout__
+            if (len(self.data) == 0 or len(self.errors) != 0):
+                sys.exit(sc.SUCCESS_NORESULTS)
+            else:
+                print(self.data)
+                sys.exit(0)
