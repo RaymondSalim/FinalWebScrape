@@ -86,3 +86,9 @@ usage:
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the file
 ```
+
+<hr>
+
+### To Do List
+- [ ] Merge similar functions in different classes
+- [ ] Improve exit code based on exception

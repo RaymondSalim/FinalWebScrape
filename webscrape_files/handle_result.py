@@ -15,10 +15,12 @@ class HandleResult:
         self.file_name = file_name
         self.file_type = file_type
         self.file_path = file_path
+        self.interrupted = False
         operating_system = platform.system()
 
         self.output_dir = str(os.path.dirname(os.path.realpath(__file__)))
 
+        # TODO REPLACE WITH PATHLIB
         if str(operating_system) == 'Linux':
             self.output_dir = self.output_dir.replace('/webscrape_files', '/Output/')
 
@@ -28,7 +30,8 @@ class HandleResult:
         if not os.path.exists(os.path.normpath(self.output_dir)):
             os.mkdir(os.path.normpath(self.output_dir))
 
-    def handle_scrape(self, data, errors):
+    def handle_scrape(self, data, errors, interrupted=False):
+        self.interrupted = interrupted
         if self.file_type == "csv":
             self.file_name += ".csv"
             file_path = self.output_dir + self.file_name
@@ -43,6 +46,7 @@ class HandleResult:
 
     def save_csv(self, path, data, errors):
         if len(data) > 0:
+            keyword = data[0]['KEYWORD']
             try:
                 keys = data[0].keys()
                 with open(path, 'w', newline='', encoding='utf-8') as csvFile:
@@ -62,7 +66,7 @@ class HandleResult:
                 print(f"Saved to {path.replace('.csv', '.json')}")
 
             finally:
-                self.save_errors(path, errors)
+                self.save_errors(path, errors, keyword)
 
         else:
             print("Nothing scraped")
@@ -70,6 +74,7 @@ class HandleResult:
 
     def save_json(self, path, data, errors):
         if len(data) > 0:
+            keyword = data[0]['KEYWORD']
             try:
                 with open(path, 'w') as outFile:
                     json.dump(data, outFile)
@@ -87,19 +92,24 @@ class HandleResult:
                     dict_writer.writerows(data)
 
             finally:
-                self.save_errors(path, errors)
+                self.save_errors(path, errors, keyword)
 
         else:
             print("Nothing scraped")
             sys.exit(sc.SUCCESS_NORESULTS)
 
-    def save_errors(self, path, errors):
+    def save_errors(self, path, errors, keyword):
+        error = {
+            "KEYWORD": keyword,
+            "ERRORS": errors
+        }
         if len(errors) > 0:
             path = path.replace('.json', '_errors.json').replace('.csv', '_errors.json')
             with open(path, 'w') as outFile:
-                json.dump(errors, outFile)
+                json.dump(error, outFile)
 
-        sys.exit(sc.SUCCESS_COMPLETE)
+        ec = sc.ERROR_INTERRUPTED if self.interrupted else sc.SUCCESS_COMPLETE
+        sys.exit(ec)
 
     def handle_retry(self, data, errors):
         ## FROM ERRORS.json
