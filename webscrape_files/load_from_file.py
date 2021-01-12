@@ -35,7 +35,7 @@ class LoadFromFile:
                     data = json.load(openFile)
 
             elif self.filetype == "csv":
-                with open(self.path, 'r', encoding=('utf-8'), newline='') as openFile:
+                with open(self.path, 'r', encoding='utf-8', newline='') as openFile:
                     data = [{key: (int(value) if value.isnumeric() else value) for key, value in row.items()}
                             for row in csv.DictReader(openFile, skipinitialspace=True)]
 
@@ -53,4 +53,3 @@ class LoadFromFile:
         self.args['query'] = data[0]['KEYWORD']
         self.args['query_parsed'] = parse.quote(data[0]['KEYWORD'])
         return urls
-

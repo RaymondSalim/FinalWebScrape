@@ -1,10 +1,7 @@
-import os
-import platform
 import re
+from urllib.parse import unquote as uq
 from typing import List
 from datetime import datetime
-from selenium import webdriver
-from webscrape_files.handle_result import HandleResult
 from . import city_list as cl
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -59,6 +56,8 @@ class Tokopedia:
         for product in products:
             try:
                 product_url = product.get_attribute('href')
+                if "ta.tokopedia.com" in product_url:
+                    product_url = self.get_url_from_ad_link(product_url)
                 list_of_url.append(product_url)
             except Exception as err:
                 print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
@@ -76,12 +75,8 @@ class Tokopedia:
             self.wait.until_not(ec.url_contains("ta.tokopedia"))
 
         except TimeoutException as err:
-            print(err.msg)
+            print(err)
             self.errors.append(driver.current_url)
-            return
-
-        if any(completed in driver.current_url for completed in self.completed_urls):
-            print("Item Skipped")
             return
 
         try:
@@ -89,7 +84,7 @@ class Tokopedia:
                 ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div[data-testid="pdpDescriptionContainer"]'), ""),
                 "pdpDescriptionContainer not found")
         except TimeoutException as err:
-            print(err.msg)
+            print(err)
             print("timed out, skipping")
             self.errors.append(driver.current_url)
             return
@@ -236,7 +231,7 @@ class Tokopedia:
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             except (NoSuchElementException, WebDriverException) as err:
-                print(err.msg)
+                print(err)
                 self.errors.append(driver.current_url)
 
             else:
@@ -267,3 +262,7 @@ class Tokopedia:
 
         except NoSuchElementException as err:
             return self.NEXT_PAGE_DEAD
+
+    def get_url_from_ad_link(self, product_url) -> str:
+        url = product_url[product_url.rindex("https")::]
+        return uq(url)

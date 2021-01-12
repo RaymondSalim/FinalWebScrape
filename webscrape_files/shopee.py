@@ -79,17 +79,13 @@ class Shopee:
         return self.errors
 
     def scrape_product_page(self, driver: WebDriver):
-        if any(completed in driver.current_url for completed in self.completed_urls):
-            print("Item Skipped")
-            return
-
         try:
             self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div.page-product'), ""),
                             "Page product not found")
             self.wait.until(ec.text_to_be_present_in_element((By.CLASS_NAME, 'qaNIZv'), ""), "Title not found")
 
         except Exception as err:
-            print(err.msg)
+            print(err)
             self.errors.append(driver.current_url)
             return
 
@@ -200,7 +196,7 @@ class Shopee:
             elif len(prices) == 2:
                 d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
             else:
-                raise Exception("    Price not found")
+                raise NoSuchElementException("    Price not found")
 
             d['VALUE'] = ""
 
@@ -263,7 +259,7 @@ class Shopee:
 
         # TODO MORE SPECIFIC EXCEPTION HANDLING
         except (NoSuchElementException, WebDriverException) as err:
-            print(err.msg)
+            print(err)
             self.errors.append(driver.current_url)
 
         else:

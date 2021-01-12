@@ -280,10 +280,10 @@ class Main:
                 else:
                     sys.exit(sc.ERROR_ARGUMENT)
 
-        except Exception as err:
-            raise err
-            print(err)
-            self.save_data(error=err)
+        except Exception as error:
+            # raise err
+            print(error)
+            self.save_data(error=error)
 
 try:
     args = parser.parse_args()

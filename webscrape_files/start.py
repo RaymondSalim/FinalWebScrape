@@ -122,7 +122,7 @@ class Start:
         try:
             driver.get(url)
         except WebDriverException as err:
-            print(err.msg)
+            print(err)
             driver.quit()
             sys.exit(sc.ERROR_NETWORK)
         else:

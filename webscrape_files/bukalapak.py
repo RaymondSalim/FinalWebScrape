@@ -79,16 +79,12 @@ class Bukalapak:
         return self.errors
 
     def scrape_product_page(self, driver: WebDriver):
-        if any(completed in driver.current_url for completed in self.completed_urls):
-            print("Item Skipped")
-            return
-
         try:
             self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[id="section-informasi-barang"]')),
                             "Page timeout")
 
         except TimeoutException as err:
-            print(err.msg)
+            print(err)
             self.errors.append(driver.current_url)
             return
 
@@ -205,7 +201,7 @@ class Bukalapak:
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             except (NoSuchElementException, WebDriverException) as err:
-                print(err.msg)
+                print(err)
                 self.errors.append(driver.current_url)
 
             else:
