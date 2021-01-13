@@ -1,6 +1,7 @@
 import json
 import platform
 import sys
+import random
 from datetime import datetime
 from typing import List
 from urllib import parse
@@ -54,13 +55,23 @@ class Start:
         self.driver_dir = str(curr_path.joinpath(chromedriver))
 
     def start_driver(self) -> webdriver:
+        curr_path = (Path(__file__).resolve()).parent.parent
+        profile_path = str(curr_path.joinpath(Path('Profiles/Selenium/')))
+
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = True
         chrome_options.add_argument('--log-level=3')
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
+        chrome_options.add_argument('--user-data-dir=' + profile_path)
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36"
+        ]
         chrome_options.add_argument(
-            'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0')
+            'user-agent=' + random.choice(user_agents))
         chrome_options.add_experimental_option("prefs", {
             "profile.default_content_setting_values.notifications": 2
         })  # Prevents annoying "Show notifications" request
@@ -167,7 +178,6 @@ class Start:
                 handle = driver.window_handles
                 driver.switch_to.window(handle[0])
         except WebDriverException as err:
-            # raise err
             print(err)
 
 
@@ -212,7 +222,6 @@ class Start:
             sys.exit(sc.ERROR_INVALID_FILE)
 
         try:
-            print(errors)
             self.process.retry_errors(urls=errors)
         except WebDriverException as err:
             print(err)

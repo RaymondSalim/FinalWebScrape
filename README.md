@@ -90,5 +90,5 @@ The following arguments are required:
 <hr>
 
 ### To Do List
-- [ ] Merge similar functions in different classes
+- [x] Merge similar functions in different classes
 - [ ] Improve exit code based on exception

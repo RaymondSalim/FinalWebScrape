@@ -281,7 +281,6 @@ class Main:
                     sys.exit(sc.ERROR_ARGUMENT)
 
         except Exception as error:
-            # raise err
             print(error)
             self.save_data(error=error)
 
