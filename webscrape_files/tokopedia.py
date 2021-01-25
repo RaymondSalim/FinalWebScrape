@@ -60,6 +60,7 @@ class Tokopedia:
                     product_url = self.get_url_from_ad_link(product_url)
                 list_of_url.append(product_url)
             except Exception as err:
+                raise err
                 print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
 
         return list_of_url
@@ -218,10 +219,13 @@ class Tokopedia:
 
                 seen_by = (
                     driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductSeenCounter"]'))
-                seen_by = seen_by[0].text[:seen_by[0].text.index("x"):].replace('(','').replace(')', '').replace(',','').replace('.', '')
-                if "rb" in seen_by:
-                    seen_by = seen_by.replace('rb', '')
-                    seen_by = int(seen_by) * 100
+                if len(seen_by) > 0:
+                    seen_by = seen_by[0].text[:seen_by[0].text.index("x"):].replace('(','').replace(')', '').replace(',','').replace('.', '')
+                    if "rb" in seen_by:
+                        seen_by = seen_by.replace('rb', '')
+                        seen_by = int(seen_by) * 100
+                else:
+                    seen_by = 0
 
                 d['DILIHAT'] = int(seen_by)
 
@@ -230,9 +234,10 @@ class Tokopedia:
 
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            except (NoSuchElementException, WebDriverException) as err:
+            except (NoSuchElementException, WebDriverException, TimeoutException) as err:
                 print(err)
                 self.errors.append(driver.current_url)
+                raise err
 
             else:
                 self.completed_urls.append(d['SOURCE'])
