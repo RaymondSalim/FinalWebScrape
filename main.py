@@ -247,7 +247,6 @@ class Main:
                 # Changes stdout to null
                 f = open(os.devnull, 'w')
                 sys.stdout = f
-                # self.args['path'] = ''
                 start = Start(args=self.args)
                 self.process = start
                 start.start()
@@ -281,7 +280,10 @@ class Main:
                     sys.exit(sc.ERROR_ARGUMENT)
 
         except Exception as error:
+            # raise error
             print(error)
+            import traceback
+            traceback.print_exc()
             self.save_data(error=error)
 
 try:

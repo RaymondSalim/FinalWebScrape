@@ -14,7 +14,7 @@ from pathlib import Path
 from . import status_codes as sc
 
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, TimeoutException
 
 from .handle_result import HandleResult
 from .load_from_file import LoadFromFile
@@ -60,8 +60,10 @@ class Start:
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = True
-        chrome_options.add_argument('--log-level=3')
         chrome_options.page_load_strategy = 'eager'
+        chrome_options.add_argument('--log-level=3')
+        chrome_options.add_argument("--disable-gpu")
+        # chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
         chrome_options.add_argument('--user-data-dir=' + profile_path)
         user_agents = [
@@ -133,6 +135,7 @@ class Start:
         try:
             driver.get(url)
         except WebDriverException as err:
+            raise err
             print(err)
             driver.quit()
             sys.exit(sc.ERROR_NETWORK)
@@ -158,7 +161,7 @@ class Start:
         try:
             for product in urls:
                 if any(completed in product for completed in completed_url):
-                    print("Item Skipped")
+                    print("Item Scraped, Skipping")
                     continue
 
                 # Opens a new tab
@@ -169,15 +172,19 @@ class Start:
 
                 # Change focus to new tab
                 driver.switch_to.window(handle[-1])
-                driver.get(product)
+                try:
+                    driver.get(product)
+                    self.process.scrape_product_page(driver)
 
-                self.process.scrape_product_page(driver)
+                except TimeoutException:
+                    self.process.errors.append(product)
 
                 # Closes and switch focus to the main tab
                 driver.execute_script("window.close();")
                 handle = driver.window_handles
                 driver.switch_to.window(handle[0])
         except WebDriverException as err:
+            raise err
             print(err)
 
 
