@@ -17,6 +17,7 @@ class Shopee:
     NEXT_PAGE_DEAD = 0
     NEXT_PAGE_EXISTS = 1
     timeout_limit = 10
+    ID = "SHOPEE"
 
     def __init__(self, args, driver, completed_urls=[]):
         self.args = args

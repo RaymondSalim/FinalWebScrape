@@ -13,6 +13,7 @@ class Bukalapak:
     timeout_limit = 10
     NEXT_PAGE_DEAD = 0
     NEXT_PAGE_EXISTS = 1
+    ID = "BUKALAPAK"
 
     def __init__(self, args, driver, completed_urls=[]):
         self.args = args
