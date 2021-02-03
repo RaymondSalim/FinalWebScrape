@@ -1,12 +1,7 @@
-import os
-import platform
 import re
 from typing import List
 from datetime import datetime
-from selenium import webdriver
-from webscrape_files.handle_result import HandleResult
 from . import city_list as cl
-from . import status_codes as sc
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -168,11 +163,13 @@ class Bukalapak:
                 d['% DISC'] = float(text_disc[-1].replace('%', '')) / 100 if len(discount) > 0 else ""
 
                 shop_category = driver.find_element_by_css_selector('div[class="c-seller__badges"]')
+                mall = len(driver.find_element_by_class_name('c-main-product__head').find_elements_by_class_name('bukamall')) > 0
+                super_seller = len(shop_category.find_elements_by_css_selector('div[class*="c-badges__new-super-seller"]')) > 0
                 cat = shop_category.text.replace('\n', '').replace(' ', '')
-                q = ['super', 'recommended', 'good', 'juragan']
-                if any(a in cat.casefold() for a in q):
+                q = ['super', 'trusted']
+                if any(a in cat.casefold() for a in q) or super_seller:
                     cat = "STAR SELLER"
-                elif "Resmi".casefold() == cat.casefold() or "bukamall" in shop_category.get_attribute('innerHTML'):
+                elif "Resmi".casefold() == cat.casefold() or "bukamall" in shop_category.get_attribute('innerHTML') or mall:
                     cat = "OFFICIAL STORE"
                 elif "Pedagang".casefold() == cat.casefold():
                     cat = "TOKO BIASA"
