@@ -1,17 +1,16 @@
 import argparse
 import os
+import platform
 import re
 import signal
 import sys
-import platform
 from datetime import datetime
+from pathlib import Path
 from urllib import parse
+
 from webscrape_files import status_codes as sc
-from webscrape_files import load_from_file as lff
-from webscrape_files import shopee, tokopedia, bukalapak
 from webscrape_files.handle_result import HandleResult
-from urllib3.connection import NewConnectionError
-from http.client import HTTPException
+from webscrape_files.start import Start
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest='command')
@@ -98,7 +97,7 @@ Either -f or -r has to be present
 
 """)
 retry_parser.add_argument('-f',
-                         '--filename',
+                          '--filename',
                           help='[REQUIRED] name of the file',
                           type=str,
                           metavar='',
@@ -119,11 +118,11 @@ The following arguments are required:
 
 """)
 convert_parser.add_argument('-f',
-                         '--filename',
-                         help='[REQUIRED] name of the file',
-                         type=str,
-                         metavar='',
-                         required=True)
+                            '--filename',
+                            help='[REQUIRED] name of the file',
+                            type=str,
+                            metavar='',
+                            required=True)
 
 continue_parser = subparsers.add_parser('continue', help="Command to continue scraping", usage="""
 
@@ -165,9 +164,7 @@ continue_parser.add_argument('-r',
                              choices=['csv', 'json']
                              )
 
-current_path = str(os.path.dirname(os.path.realpath(__file__)))
-
-
+current_path = (Path(__file__).resolve()).parent
 
 
 class Main:
@@ -179,10 +176,8 @@ class Main:
         self.check_args()
 
     def get_final_path(self):
-        if str(self.operating_system) == 'Windows':
-            return current_path + '\\Output\\' + self.args['filename']
-        else:
-            return current_path + '/Output/' + self.args['filename']
+        path = Path(f"Output/{self.args['filename']}")
+        return str(current_path.joinpath(path))
 
     def check_args(self):
         arguments = self.args.keys()
@@ -212,16 +207,18 @@ class Main:
         # Replaces any characters to HTML Charset
         self.args['query_parsed'] = parse.quote(self.args['query'])
 
-    def handle_sigint(self, signum, frame):
+    def save_data(self, error=None):
         try:
-            driver = self.process.driver
+            driver = self.process.get_driver()
             driver.quit()
         except AttributeError:
             pass
 
-        data = self.process.data
-        errors = self.process.errors
-        id = self.process.ID
+        proc = self.process.get_process()
+
+        data = proc.data
+        errors = proc.errors
+        id = self.process.get_ID()
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
@@ -229,79 +226,65 @@ class Main:
 
             else:
                 if self.args['command'] != 'scrape':
-                    self.args['filename'] = self.args['filename'].replace('.' + self.args['result'], '') + f"_{self.args['command']}"
-
+                    self.args['filename'] = self.args['filename'].replace('.' + self.args['result'],
+                                                                          '') + f"_{self.args['command']}"
 
             print("Process is interrupted, results might not be complete")
+            if error is not None:
+                print(error)
+
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
-            handle_class.handle_scrape(data, errors)
+            handle_class.handle_scrape(data, errors, interrupted=True)
         else:
             sys.exit(sc.SUCCESS_NORESULTS)
 
+    def handle_sigint(self, signum, frame):
+        self.save_data()
 
     def main(self):
         try:
             if self.args['command'] == 'scrapeurl':
-                # f = open(os.devnull, 'w')
-                # sys.stdout = f
-
-                self.process = lff.LoadFromFile(args=self.args)
-                self.process.retry(urls=[self.args['url']])
+                # Changes stdout to null
+                f = open(os.devnull, 'w')
+                sys.stdout = f
+                start = Start(args=self.args)
+                self.process = start
+                start.start()
 
             else:
                 self.clear_console()
 
                 if self.args['command'] == 'scrape':
-                    # scrape
-                    if self.args['marketplace'].lower() == 'tokopedia':
-                        self.process = tokopedia.Tokopedia(self.args)
-                        self.process.start_scrape()
+                    """
+                        scrape takes 4 required parameters and 2 optional
+                            Required:
+                                - marketplace
+                                - query
+                                - endpage
+                                - result
+                            Optional:
+                                - startpage (Default = 1)
+                                - filename 
+                    """
+                    start = Start(args=self.args)
+                    self.process = start
+                    start.start()
 
-                    elif self.args['marketplace'].lower() == 'bukalapak':
-                        self.process = bukalapak.Bukalapak(self.args)
-                        self.process.start_scrape()
-
-                    elif self.args['marketplace'].lower() == 'shopee':
-                        self.process = shopee.Shopee(self.args)
-                        self.process.start_scrape()
-
-                elif self.args['command'] == 'continue':
-                    path = self.get_final_path()
-                    self.process = lff.LoadFromFile(path=path, args=self.args)
-                    self.process.continue_scrape()
-
-                elif self.args['command'] == 'retry':
-                    path = self.get_final_path()
-
-                    self.process = lff.LoadFromFile(path=path, args=self.args)
-                    self.process.retry()
-
-                elif self.args['command'] == 'convert':
-                    path = self.get_final_path()
-                    self.args['result'] = ''
-                    self.process = lff.LoadFromFile(path=path, args=self.args)
-                    self.process.convert()
-
+                elif self.args['command'] in ['continue', 'retry', 'convert']:
+                    self.args['path'] = self.get_final_path()
+                    start = Start(args=self.args)
+                    self.process = start
+                    start.start()
 
                 else:
                     sys.exit(sc.ERROR_ARGUMENT)
-        except (NewConnectionError, HTTPException):
-            sys.exit(sc.ERROR_GENERAL)
-            pass
 
-        except KeyboardInterrupt:
-            pass
-
-        except Exception as err:
-            try:
-                driver = self.process.driver
-                driver.quit()
-            except AttributeError:
-                pass
-            finally:
-                print(err)
-                self.handle_sigint(None, None)
-
+        except Exception as error:
+            # raise error
+            print(error)
+            # import traceback
+            # traceback.print_exc()
+            self.save_data(error=error)
 
 try:
     args = parser.parse_args()
