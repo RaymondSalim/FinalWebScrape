@@ -282,8 +282,8 @@ class Main:
         except Exception as error:
             # raise error
             print(error)
-            import traceback
-            traceback.print_exc()
+            # import traceback
+            # traceback.print_exc()
             self.save_data(error=error)
 
 try:
