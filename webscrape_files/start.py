@@ -135,7 +135,7 @@ class Start:
         try:
             driver.get(url)
         except WebDriverException as err:
-            raise err
+            # raise err
             print(err)
             driver.quit()
             sys.exit(sc.ERROR_NETWORK)
@@ -158,34 +158,34 @@ class Start:
             self.handle_data(data, errors)
 
     def scrape_from_url_list(self, driver, urls: List[str], completed_url=[]):
-        try:
             for product in urls:
                 if any(completed in product for completed in completed_url):
                     print("Item Scraped, Skipping")
                     continue
-
-                # Opens a new tab
-                driver.execute_script("window.open('');")
-
-                # Gets a list of open tabs
-                handle = driver.window_handles
-
-                # Change focus to new tab
-                driver.switch_to.window(handle[-1])
                 try:
-                    driver.get(product)
-                    self.process.scrape_product_page(driver)
+                    # Opens a new tab
+                    driver.execute_script("window.open('');")
 
-                except TimeoutException:
-                    self.process.errors.append(product)
+                    # Gets a list of open tabs
+                    handle = driver.window_handles
 
-                # Closes and switch focus to the main tab
-                driver.execute_script("window.close();")
-                handle = driver.window_handles
-                driver.switch_to.window(handle[0])
-        except WebDriverException as err:
-            raise err
-            print(err)
+                    # Change focus to new tab
+                    driver.switch_to.window(handle[-1])
+                    try:
+                        driver.get(product)
+                        self.process.scrape_product_page(driver)
+
+                    except TimeoutException:
+                        self.process.errors.append(product)
+
+                    # Closes and switch focus to the main tab
+                    driver.execute_script("window.close();")
+                    handle = driver.window_handles
+                    driver.switch_to.window(handle[0])
+                except WebDriverException as err:
+                    # raise err
+                    print(err)
+                    continue
 
 
     # Continue functions
