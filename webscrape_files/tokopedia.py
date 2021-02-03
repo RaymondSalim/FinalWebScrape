@@ -60,8 +60,9 @@ class Tokopedia:
                     product_url = self.get_url_from_ad_link(product_url)
                 list_of_url.append(product_url)
             except Exception as err:
-                raise err
+                # raise err
                 print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+                continue
 
         return list_of_url
 
@@ -112,7 +113,7 @@ class Tokopedia:
                 d['FARMASI'] = ""
                 d['E-COMMERCE'] = 'TOKOPEDIA'
 
-                self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'a[data-testid="llbPDPFooterShopName"]'), ""))
+                self.wait.until(lambda driver: driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text.strip() != '')
                 d['TOKO'] = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text
                 driver.implicitly_wait(0)
 
@@ -237,7 +238,7 @@ class Tokopedia:
             except (NoSuchElementException, WebDriverException, TimeoutException) as err:
                 print(err)
                 self.errors.append(driver.current_url)
-                raise err
+                # raise err
 
             else:
                 self.completed_urls.append(d['SOURCE'])
