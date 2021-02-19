@@ -78,7 +78,7 @@ class Start:
             "profile.default_content_setting_values.notifications": 2
         })  # Prevents annoying "Show notifications" request
 
-        driver = webdriver.Chrome(r'/content/Scrape/Files/chromedriver', options=chrome_options)
+        driver = webdriver.Chrome(r'/content/FinalWebScrape/Files/chromedriver', options=chrome_options)
         self.driver = driver
 
         print(f"{self.ID} {self.args['query']} Browser PID: {driver.service.process.pid}")
