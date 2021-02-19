@@ -60,6 +60,8 @@ class Start:
 
         chrome_options = webdriver.ChromeOptions()
         # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.headless = True
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
