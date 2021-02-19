@@ -56,16 +56,14 @@ class Start:
 
     def start_driver(self) -> webdriver:
         curr_path = (Path(__file__).resolve()).parent.parent
-        profile_path = str(curr_path.joinpath(Path('Profiles/Selenium/')))
+        # profile_path = str(curr_path.joinpath(Path('Profiles/Profile 8/')))
 
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"
         chrome_options.headless = True
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
-        chrome_options.add_argument('--user-data-dir=' + profile_path)
-
+        # chrome_options.add_argument('--user-data-dir=' + profile_path)
         user_agents = [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
