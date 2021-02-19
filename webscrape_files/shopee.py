@@ -59,7 +59,13 @@ class Shopee:
             print(f"Page {start_page}", flush=True)
             search_results = self.driver.find_element_by_css_selector(
                 'div[class="row shopee-search-item-result__items"]')
+
             products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+
+            # For Shop Search
+            # search_results = self.driver.find_element_by_css_selector(
+            #     'div[class="shop-search-result-view"]')
+            # products = search_results.find_elements_by_css_selector('div.shop-search-result-view__item')
 
             list_of_url = []
 

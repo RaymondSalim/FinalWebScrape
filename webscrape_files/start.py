@@ -56,16 +56,17 @@ class Start:
 
     def start_driver(self) -> webdriver:
         curr_path = (Path(__file__).resolve()).parent.parent
-        profile_path = str(curr_path.joinpath(Path('Profiles/Selenium/')))
+        # profile_path = str(curr_path.joinpath(Path('Profiles/Profile 8/')))
 
         chrome_options = webdriver.ChromeOptions()
+        # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"
         chrome_options.headless = True
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--log-level=3')
         chrome_options.add_argument("--disable-gpu")
         # chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--window-size=1080,3840')
-        chrome_options.add_argument('--user-data-dir=' + profile_path)
+        # chrome_options.add_argument('--user-data-dir=' + profile_path)
         user_agents = [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
@@ -119,6 +120,7 @@ class Start:
             end_page = self.args['endpage'] if self.args['endpage'] != 0 else 9999
             if (self.ID.casefold() == 'shopee'.casefold()):
                 url = f"https://shopee.co.id/search?page={start_page - 1}&keyword={self.args['query_parsed']}"
+                # url = f"https://shopee.co.id/shop/17326605/search"
                 self.process = Shopee(args=self.args, driver=driver, completed_urls=completed_url)
 
             else:
@@ -135,7 +137,6 @@ class Start:
         try:
             driver.get(url)
         except WebDriverException as err:
-            # raise err
             print(err)
             driver.quit()
             sys.exit(sc.ERROR_NETWORK)
@@ -175,7 +176,8 @@ class Start:
                         driver.get(product)
                         self.process.scrape_product_page(driver)
 
-                    except TimeoutException:
+                    except TimeoutException as err:
+                        # raise err
                         self.process.errors.append(product)
 
                     # Closes and switch focus to the main tab
