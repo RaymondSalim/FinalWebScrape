@@ -81,7 +81,7 @@ class Start:
         driver = webdriver.Chrome(r'/content/FinalWebScrape/Files/chromedriver', options=chrome_options)
         self.driver = driver
 
-        print(f"{self.ID} {self.args['query']} Browser PID: {driver.service.process.pid}")
+        print(f"{self.ID} {self.args.get('query', self.args.get('filename'))} Browser PID: {driver.service.process.pid}")
 
         return driver
 
