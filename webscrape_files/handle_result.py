@@ -30,20 +30,6 @@ class HandleResult:
         if not os.path.exists(os.path.normpath(self.output_dir)):
             os.mkdir(os.path.normpath(self.output_dir))
 
-    def handle_scrape(self, data, errors, interrupted=False):
-        self.interrupted = interrupted
-        if self.file_type == "csv":
-            self.file_name += ".csv"
-            file_path = self.output_dir + self.file_name
-
-            self.save_csv(file_path, data, errors)
-
-        elif self.file_type == "json":
-            self.file_name += ".json"
-            file_path = self.output_dir + self.file_name
-
-            self.save_json(file_path, data, errors)
-
     def save_csv(self, path, data, errors):
         if len(data) > 0:
             keyword = data[0]['KEYWORD']
@@ -111,7 +97,33 @@ class HandleResult:
         ec = sc.ERROR_INTERRUPTED if self.interrupted else sc.SUCCESS_COMPLETE
         sys.exit(ec)
 
+    def handle_scrape(self, data, errors, interrupted=False):
+        if self.args["debug"]:
+            print(json.dumps({
+                "data_length": len(data),
+                "error_length": len(errors),
+                "interrupted": interrupted
+            }, indent=4))
+
+        self.interrupted = interrupted
+        if self.file_type == "csv":
+            self.file_name += ".csv"
+            file_path = self.output_dir + self.file_name
+
+            self.save_csv(file_path, data, errors)
+
+        elif self.file_type == "json":
+            self.file_name += ".json"
+            file_path = self.output_dir + self.file_name
+
+            self.save_json(file_path, data, errors)
+
     def handle_retry(self, data, errors):
+        if self.args["debug"]:
+            print(json.dumps({
+                "data_length": len(data),
+                "error_length": len(errors),
+            }, indent=4))
         ## FROM ERRORS.json
         if "csv" in self.file_type:
             file_path = self.output_dir + self.file_name.replace('.csv', '_retry.' + self.file_type).replace('.json', '_retry.' + self.file_type)
@@ -140,3 +152,13 @@ class HandleResult:
             file_path = self.file_path.replace('.json', '.csv')
             self.save_csv(file_path, data, errors=[])
 
+    def handle_merge(self, data):
+        if "json" in self.file_path[0]:
+            file_path = self.file_path[0].replace('_continue.', '.').replace('.json', '_merged.json')
+            self.save_json(file_path, data, errors=[])
+            print(f"saved to {file_path}")
+
+        elif "csv" in self.file_path[0]:
+            file_path = self.file_path[0].replace('_continue.', '.').replace('.csv', '_merged.csv')
+            self.save_csv(file_path, data, errors=[])
+            print(f"saved to {file_path}")
