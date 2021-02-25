@@ -13,6 +13,10 @@ from webscrape_files.handle_result import HandleResult
 from webscrape_files.start import Start
 
 parser = argparse.ArgumentParser()
+verbose = parser.add_argument('-d', '--debug',
+                              action='store_true',
+                              help='[OPTIONAL] debugging mode')
+
 subparsers = parser.add_subparsers(required=True, dest='command')
 
 scrape_parser = subparsers.add_parser('scrape', help="Command to scrape", usage="""
@@ -31,7 +35,7 @@ scrape_parser.add_argument('-m',
                            help='[REQUIRED] the marketplace',
                            metavar='',
                            type=str.lower,
-                           choices=['tokopedia', 'bukalapak', 'shopee'],
+                           choices=['tokopedia', 'bukalapak', 'shopee', 'lazada'],
                            required=True)
 
 scrape_parser.add_argument('-q',
@@ -164,6 +168,27 @@ continue_parser.add_argument('-r',
                              choices=['csv', 'json']
                              )
 
+merge_parser = subparsers.add_parser('merge', help="Command to merge two files csv/json", usage="""
+
+The following arguments are required:
+-f1 / --file-1         [REQUIRED] name of the first file
+-f2 / --file-2         [REQUIRED] name of the second file
+
+""")
+merge_parser.add_argument('-f1',
+                            '--file-1',
+                            help='[REQUIRED] name of the first file',
+                            type=str,
+                            metavar='',
+                            required=True)
+
+merge_parser.add_argument('-f2',
+                            '--file-2',
+                            help='[REQUIRED] name of the second file',
+                            type=str,
+                            metavar='',
+                            required=True)
+
 current_path = (Path(__file__).resolve()).parent
 
 
@@ -176,8 +201,14 @@ class Main:
         self.check_args()
 
     def get_final_path(self):
-        path = Path(f"Output/{self.args['filename']}")
-        return str(current_path.joinpath(path))
+        if self.args['command'].casefold() == 'merge'.casefold():
+            path1 = Path(f"Output/{self.args['file_1']}")
+            path2 = Path(f"Output/{self.args['file_2']}")
+
+            return [str(current_path.joinpath(path1)), str(current_path.joinpath(path2))]
+        else:
+            path = Path(f"Output/{self.args['filename']}")
+            return str(current_path.joinpath(path))
 
     def check_args(self):
         arguments = self.args.keys()
@@ -270,7 +301,7 @@ class Main:
                     self.process = start
                     start.start()
 
-                elif self.args['command'] in ['continue', 'retry', 'convert']:
+                elif self.args['command'] in ['continue', 'retry', 'convert', 'merge']:
                     self.args['path'] = self.get_final_path()
                     start = Start(args=self.args)
                     self.process = start
@@ -282,8 +313,10 @@ class Main:
         except Exception as error:
             # raise error
             print(error)
-            # import traceback
-            # traceback.print_exc()
+
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc()
             self.save_data(error=error)
 
 try:
