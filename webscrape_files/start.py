@@ -61,7 +61,7 @@ class Start:
 
         chrome_options = webdriver.ChromeOptions()
         # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"
-        chrome_options.headless = True
+        chrome_options.headless = self.args['no_headless']
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--log-level=3')
         chrome_options.add_argument("--disable-gpu")
@@ -300,7 +300,7 @@ class Start:
                 # Filename argument is not specified, so filename will be generated
                 self.args['filename'] = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '-')}"
 
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
+            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)
             handle_class.handle_scrape(data, errors)
 
         elif self.args['command'].casefold() == 'scrapeurl'.casefold():
@@ -311,7 +311,7 @@ class Start:
                 print(json.dumps(data))
                 sys.exit(sc.SUCCESS_COMPLETE)
         else:
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
+            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)
 
             if self.args['command'].casefold() == "continue".casefold():
                 handle_class.handle_continue(data, errors)
@@ -322,7 +322,7 @@ class Start:
     def convert(self):
         lff = LoadFromFile(args=self.args, path=self.args['path'])
         data = lff.load_file()
-        hr = HandleResult(file_path=self.args['path'])
+        hr = HandleResult(file_path=self.args['path'], args=self.args)
         hr.handle_convert(data)
 
     def merge(self):
@@ -334,5 +334,5 @@ class Start:
 
         combinedData = data1 + data2
 
-        hr = HandleResult(file_path=self.args['path'])
+        hr = HandleResult(file_path=self.args['path'], args=self.args)
         hr.handle_merge(combinedData)

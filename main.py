@@ -17,6 +17,10 @@ verbose = parser.add_argument('-d', '--debug',
                               action='store_true',
                               help='[OPTIONAL] debugging mode')
 
+no_headless = parser.add_argument('--no-headless',
+                                  action='store_false',
+                                  help='[OPTIONAL] start chrome in non-headless mode')
+
 subparsers = parser.add_subparsers(required=True, dest='command')
 
 scrape_parser = subparsers.add_parser('scrape', help="Command to scrape", usage="""
@@ -264,7 +268,7 @@ class Main:
             if error is not None:
                 print(error)
 
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
+            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)
             handle_class.handle_scrape(data, errors, interrupted=True)
         else:
             sys.exit(sc.SUCCESS_NORESULTS)
@@ -317,6 +321,7 @@ class Main:
             if self.args["debug"]:
                 import traceback
                 traceback.print_exc()
+
             self.save_data(error=error)
 
 try:
