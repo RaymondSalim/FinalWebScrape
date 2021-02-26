@@ -10,11 +10,13 @@ class HandleResult:
     def __init__(self,
                  file_name=None,
                  file_type=None,
-                 file_path=None
+                 file_path=None,
+                 args=None
                  ):
         self.file_name = file_name
         self.file_type = file_type
         self.file_path = file_path
+        self.args = args
         self.interrupted = False
         operating_system = platform.system()
 

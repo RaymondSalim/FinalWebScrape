@@ -5,7 +5,9 @@ from typing import List
 from datetime import datetime
 from selenium import webdriver
 from webscrape_files.handle_result import HandleResult
+import json
 from . import city_list as cl
+from selenium.webdriver.remote import webelement
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -51,20 +53,28 @@ class Shopee:
             pass
 
         try:
+            # self.wait.until(ec.presence_of_element_located(
+            #     (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
+            # self.wait.until(ec.presence_of_element_located(
+            #     (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"] div[class*="shopee-search-item-result__item"]')), "No items found on this page")
+
             self.wait.until(ec.presence_of_element_located(
-                (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
-            self.wait.until(ec.presence_of_element_located(
-                (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"] div[class*="shopee-search-item-result__item"]')), "No items found on this page")
+                (By.CSS_SELECTOR, 'script[type="application/ld+json"][data-rh="true"]')), "No items found on this page")
+
         except:
             return []
 
         else:
             print(f"Page {start_page}", flush=True)
-            search_results = self.driver.find_element_by_css_selector(
-                'div[class="row shopee-search-item-result__items"]')
+            # search_results = self.driver.find_element_by_css_selector(
+            #     'div[class="row shopee-search-item-result__items"]')
+            #
+            # products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+            self.wait.until(lambda driver: len(driver.find_elements_by_css_selector('script[type="application/ld+json"][data-rh="true"]')) > 1)
 
-            products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+            products: List[webdriver] = self.driver.find_elements_by_css_selector('script[type="application/ld+json"][data-rh="true"]')
 
+            print(f"size is {len(products)}")
             # For Shop Search
             # search_results = self.driver.find_element_by_css_selector(
             #     'div[class="shop-search-result-view"]')
@@ -72,10 +82,27 @@ class Shopee:
 
             list_of_url = []
 
-            for product in products:
+            for product in products: #type: webelement
+                # try:
+                #     product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                #     list_of_url.append(product_url)
+                # except Exception as err:
+                #     print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+                #     if self.args["debug"]:
+                #         import traceback
+                #         traceback.print_exc(limit=4)
+
                 try:
-                    product_url = product.find_element_by_tag_name('a').get_attribute('href')
-                    list_of_url.append(product_url)
+                    data = json.loads(product.get_attribute('innerHTML').strip())
+                    if (data['@type'].casefold() != 'product'.casefold()):
+                        if self.args["debug"]:
+                            print("Data is not of product type, skipping")
+                        continue
+
+                    list_of_url.append(data['url'])
+
+                    # product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                    # list_of_url.append(product_url)
                 except Exception as err:
                     print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
                     if self.args["debug"]:
@@ -286,7 +313,10 @@ class Shopee:
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
-            driver.implicitly_wait(3)
+
+            self.wait.until(ec.presence_of_element_located(
+                (By.CSS_SELECTOR, 'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')), "No next page")
+
             next_button = driver.find_element_by_css_selector(
                 'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')
 
