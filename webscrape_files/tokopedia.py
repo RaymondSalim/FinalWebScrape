@@ -61,6 +61,9 @@ class Tokopedia:
                 list_of_url.append(product_url)
             except Exception as err:
                 print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+                if self.args["debug"]:
+                    import traceback
+                    traceback.print_exc(limit=4)
 
         return list_of_url
 
@@ -71,13 +74,13 @@ class Tokopedia:
         return self.errors
 
     def scrape_product_page(self, driver: WebDriver):
-        try:
-            self.wait.until_not(ec.url_contains("ta.tokopedia"))
-
-        except TimeoutException as err:
-            print(err)
-            self.errors.append(driver.current_url)
-            return
+        # try:
+        #     self.wait.until_not(ec.url_contains("ta.tokopedia"))
+        #
+        # except TimeoutException as err:
+        #     print(err)
+        #     self.errors.append(driver.current_url)
+        #     return
 
         # try:
         #     self.wait.until(
@@ -121,7 +124,7 @@ class Tokopedia:
 
             # self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'a[data-testid="llbPDPFooterShopName"]'), "Shop name not found"))
             self.wait.until(lambda driver:driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text.split() != '', "Shop name not found")
-            d['TOKO'] = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text
+            d['TOKO'] = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text.strip()
             driver.implicitly_wait(0)
 
             # self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-testid="lblPDPSellerOrigin"]')))
@@ -146,7 +149,7 @@ class Tokopedia:
 
             d['KOTA'] = kota or ""
 
-            nama_produk = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text
+            nama_produk = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text.strip()
 
             box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
             rbox = re.findall(box_patt, nama_produk)
@@ -174,10 +177,10 @@ class Tokopedia:
             for i in range(0, len(range_containers)):
                 range_title = range_containers[i].find_elements_by_css_selector('div[data-testid*="pdpVariantTitle"] span')
                 if len(range_title) > 0:
-                    if range_title[0].text in ignored_containers:
+                    if range_title[0].text.strip() in ignored_containers:
                         continue
                     else:
-                        title = range_title[0].text
+                        title = range_title[0].text.strip()
                         range_options_container = range_containers[i].find_elements_by_css_selector('[data-testid*="pdpVariantItemLevel"]')
 
                         options = []
@@ -187,7 +190,7 @@ class Tokopedia:
                             if len(range_options) > 0:
                                 range_element = range_options[0].get_attribute('alt')
                             else:
-                                range_element = range_options_container[j].find_element_by_tag_name('span').text
+                                range_element = range_options_container[j].find_element_by_tag_name('span').text.strip()
 
                             options.append(range_element)
 
@@ -198,7 +201,7 @@ class Tokopedia:
 
             sold_count_valid = driver.find_elements_by_css_selector(
                 'div[data-testid="lblPDPDetailProductSoldCounter"]')
-            sold_count = sold_count_valid[0].text if len(sold_count_valid) > 0 else ""
+            sold_count = sold_count_valid[0].text.strip() if len(sold_count_valid) > 0 else ""
             if ("barang berhasil terjual".casefold() in sold_count.casefold()):
                 x = re.search('(\d+)', sold_count)
                 sold_count = x.group(1)
@@ -213,15 +216,15 @@ class Tokopedia:
 
             discount = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailOriginalPrice"]')
             if len(discount) > 0:
-                d['HARGA UNIT TERKECIL'] = int((discount[0].text[2::]).replace(".", ""))
+                d['HARGA UNIT TERKECIL'] = int((discount[0].text.strip()[2::]).replace(".", ""))
             else:
-                price = driver.find_element_by_css_selector('div[data-testid="lblPDPDetailProductPrice"]').text
+                price = driver.find_element_by_css_selector('div[data-testid="lblPDPDetailProductPrice"]').text.strip()
                 d['HARGA UNIT TERKECIL'] = int((price[2::]).replace(".", ""))
 
             d['VALUE'] = ""
 
             discount = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailDiscountPercentage"]')
-            d['% DISC'] = float(discount[0].text.replace('%',''))/100 if len(discount) > 0 else ""
+            d['% DISC'] = float(discount[0].text.strip().replace('%',''))/100 if len(discount) > 0 else ""
 
             shop_container = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]')
             shop_category = shop_container.find_elements_by_css_selector('img[data-testid*="pdpShopBadge"]')
@@ -247,11 +250,11 @@ class Tokopedia:
             d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
             rating = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductRatingNumber"]')
-            d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text)*20 if len(rating) > 0 else ""
+            d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text.strip())*20 if len(rating) > 0 else ""
 
             rating_total = driver.find_elements_by_css_selector(
                 'span[data-testid="lblPDPDetailProductRatingCounter"]')
-            rating_total = rating_total[0].text.replace('(','').replace(',','').replace('.', '').replace(' ulasan)', '') if len(rating_total) > 0 else ""
+            rating_total = rating_total[0].text.strip().replace('(','').replace(',','').replace('.', '').replace(' ulasan)', '') if len(rating_total) > 0 else ""
             if "rb" in rating_total:
                 rating_total = rating_total.replace('rb','')
                 rating_total = int(rating_total) * 100
@@ -281,6 +284,10 @@ class Tokopedia:
             print(err)
             self.errors.append(driver.current_url)
 
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
+
         else:
             self.completed_urls.append(d['SOURCE'])
             self.data.append(d)
@@ -305,9 +312,17 @@ class Tokopedia:
 
         except TimeoutException as err:
             print(err)
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
+
             return self.NEXT_PAGE_DEAD
 
-        except NoSuchElementException as err:
+        except NoSuchElementException:
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
+
             return self.NEXT_PAGE_DEAD
 
     def get_url_from_ad_link(self, product_url) -> str:

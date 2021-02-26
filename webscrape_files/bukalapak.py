@@ -63,8 +63,13 @@ class Bukalapak:
                 try:
                     product_url = product.find_element_by_tag_name('a').get_attribute('href')
                     list_of_url.append(product_url)
-                except NoSuchElementException:
-                    pass
+                except Exception as err:
+                    print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+                    if self.args["debug"]:
+                        import traceback
+                        traceback.print_exc(limit=4)
+
+
             return list_of_url
 
     def get_data(self):
@@ -102,9 +107,9 @@ class Bukalapak:
                 d['E-COMMERCE'] = 'BUKALAPAK'
 
                 shop = driver.find_element_by_class_name('c-seller__info')
-                d['TOKO'] = shop.find_element_by_css_selector('a[class="c-link--primary--black"]').text
+                d['TOKO'] = shop.find_element_by_css_selector('a[class="c-link--primary--black"]').text.strip()
 
-                location = driver.find_element_by_css_selector('a[class="c-seller__city u-mrgn-bottom--2"]').text
+                location = driver.find_element_by_css_selector('a[class="c-seller__city u-mrgn-bottom--2"]').text.strip()
                 d['ALAMAT'] = location
 
                 kota = None
@@ -123,7 +128,7 @@ class Bukalapak:
                 d['KOTA'] = kota or ""
 
                 nama_produk = driver.find_element_by_css_selector(
-                    'h1[class="c-main-product__title u-txt--large"]').text
+                    'h1[class="c-main-product__title u-txt--large"]').text.strip()
 
                 box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
                 rbox = re.findall(box_patt, nama_produk)
@@ -186,7 +191,7 @@ class Bukalapak:
                 d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
                 rating = driver.find_elements_by_css_selector('span[class="summary__score"]')
-                d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text) if len(rating) > 0 else ""
+                d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text.strip()) if len(rating) > 0 else ""
 
                 d['JML ULASAN'] = int(ratingc) if len(mpr_arr) == 4 else ""
 
@@ -200,6 +205,9 @@ class Bukalapak:
             except (NoSuchElementException, WebDriverException) as err:
                 print(err)
                 self.errors.append(driver.current_url)
+                if self.args["debug"]:
+                    import traceback
+                    traceback.print_exc(limit=4)
 
             else:
                 self.completed_urls.append(d['SOURCE'])
@@ -220,7 +228,13 @@ class Bukalapak:
 
         except TimeoutException as err:
             print(err)
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
             return self.NEXT_PAGE_DEAD
 
         except NoSuchElementException as err:
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
             return self.NEXT_PAGE_DEAD

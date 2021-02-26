@@ -8,6 +8,7 @@ from urllib import parse
 
 from .bukalapak import Bukalapak
 from .tokopedia import Tokopedia
+from .lazada import Lazada
 from .shopee import Shopee
 from pathlib import Path
 
@@ -60,7 +61,7 @@ class Start:
 
         chrome_options = webdriver.ChromeOptions()
         # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"
-        chrome_options.headless = True
+        chrome_options.headless = self.args['no_headless']
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--log-level=3')
         chrome_options.add_argument("--disable-gpu")
@@ -83,12 +84,25 @@ class Start:
 
         print(f"Browser PID: {driver.service.process.pid}")
 
+        if self.args["debug"]:
+            print(json.dumps({
+                "chrome_options": {
+                    "headless": chrome_options.headless,
+                    "arguments": chrome_options.arguments,
+                    "options": chrome_options.experimental_options,
+                }
+            }, indent=4))
+
         self.driver = driver
 
         return driver
 
     def start(self):
-        driver = self.start_driver()
+        if self.args["debug"]:
+            print(json.dumps(self.args, indent=4))
+
+        if self.args['command'].casefold() not in ['convert', 'merge']:
+            driver = self.start_driver()
 
         if self.args['command'].casefold() == 'scrape'.casefold():
             self.scrape(driver=driver)
@@ -101,6 +115,9 @@ class Start:
 
         elif self.args['command'].casefold() == 'retry'.casefold() or self.args['command'].casefold() == 'scrapeurl'.casefold():
             self.retry(driver=driver)
+
+        elif self.args['command'].casefold() == 'merge'.casefold():
+            self.merge()
 
     # Scrape functions
     def scrape(self, driver, completed_url=[]):
@@ -123,7 +140,11 @@ class Start:
                 # url = f"https://shopee.co.id/shop/17326605/search"
                 self.process = Shopee(args=self.args, driver=driver, completed_urls=completed_url)
 
-            else:
+            elif (self.ID.casefold() == 'lazada'.casefold()):
+                url = "https://www.lazada.co.id/kalbe-consumer-health/?from=wangpu&lang=id&langFlag=id&page=1&pageTypeId=2&q=All-Products"
+                self.process = Lazada(args=self.args, driver=driver, completed_urls=completed_url)
+
+            elif (self.ID.casefold() == 'tokopedia'.casefold()):
                 url = f"https://www.tokopedia.com/search?page={start_page}&q={self.args['query_parsed']}"
                 self.process = Tokopedia(args=self.args, driver=driver, completed_urls=completed_url)
 
@@ -139,16 +160,33 @@ class Start:
         except WebDriverException as err:
             print(err)
             driver.quit()
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
+
             sys.exit(sc.ERROR_NETWORK)
         else:
             while start_page <= end_page:
+                if self.args["debug"]:
+                    print(f"Current Page URL: {driver.current_url}")
+
                 search_result_urls = self.process.get_urls_from_search_results(start_page=start_page)
+
+                if self.args["debug"]:
+                    print(f"{len(search_result_urls)} products in current page")
+
                 self.scrape_from_url_list(urls=search_result_urls, driver=driver, completed_url=completed_url)
 
                 has_next = self.process.next_search_page(driver)
                 if has_next == self.NEXT_PAGE_EXISTS:
+                    if self.args["debug"]:
+                        print("Next Page Exists")
+
                     start_page += 1
                 elif has_next == self.NEXT_PAGE_DEAD:
+                    if self.args["debug"]:
+                        ss = driver.get_screenshot_as_png()
+                        print("Next Page Doesn't Exists")
                     break
 
             driver.quit()
@@ -162,6 +200,8 @@ class Start:
             for product in urls:
                 if any(completed in product for completed in completed_url):
                     print("Item Scraped, Skipping")
+                    if self.args["debug"]:
+                        print(product)
                     continue
                 try:
                     # Opens a new tab
@@ -178,6 +218,10 @@ class Start:
 
                     except TimeoutException as err:
                         # raise err
+                        if self.args["debug"]:
+                            import traceback
+                            traceback.print_exc(limit=4)
+
                         self.process.errors.append(product)
 
                     # Closes and switch focus to the main tab
@@ -186,6 +230,10 @@ class Start:
                     driver.switch_to.window(handle[0])
                 except WebDriverException as err:
                     # raise err
+                    if self.args["debug"]:
+                        import traceback
+                        traceback.print_exc(limit=4)
+
                     print(err)
                     continue
 
@@ -233,6 +281,9 @@ class Start:
         try:
             self.process.retry_errors(urls=errors)
         except WebDriverException as err:
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
             print(err)
 
         data = self.process.get_data()
@@ -249,7 +300,7 @@ class Start:
                 # Filename argument is not specified, so filename will be generated
                 self.args['filename'] = f"{self.args['query']}_{self.ID}_{str(datetime.now()).replace(':', '-')}"
 
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
+            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)
             handle_class.handle_scrape(data, errors)
 
         elif self.args['command'].casefold() == 'scrapeurl'.casefold():
@@ -260,7 +311,7 @@ class Start:
                 print(json.dumps(data))
                 sys.exit(sc.SUCCESS_COMPLETE)
         else:
-            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'])
+            handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)
 
             if self.args['command'].casefold() == "continue".casefold():
                 handle_class.handle_continue(data, errors)
@@ -271,5 +322,17 @@ class Start:
     def convert(self):
         lff = LoadFromFile(args=self.args, path=self.args['path'])
         data = lff.load_file()
-        hr = HandleResult(file_path=self.args['path'])
+        hr = HandleResult(file_path=self.args['path'], args=self.args)
         hr.handle_convert(data)
+
+    def merge(self):
+        lff1 = LoadFromFile(args=self.args, path=self.args['path'][0])
+        data1 = lff1.load_file()
+
+        lff2 = LoadFromFile(args=self.args, path=self.args['path'][1])
+        data2 = lff2.load_file()
+
+        combinedData = data1 + data2
+
+        hr = HandleResult(file_path=self.args['path'], args=self.args)
+        hr.handle_merge(combinedData)

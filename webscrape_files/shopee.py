@@ -5,7 +5,9 @@ from typing import List
 from datetime import datetime
 from selenium import webdriver
 from webscrape_files.handle_result import HandleResult
+import json
 from . import city_list as cl
+from selenium.webdriver.remote import webelement
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -41,6 +43,7 @@ class Shopee:
         driver.quit()
 
     def get_urls_from_search_results(self, start_page) -> List[str]:
+
         try:
             has_results = self.driver.find_element_by_css_selector('div[class="shopee-search-result-header__text"]').text
             if "Kami tidak dapat menemukan" in has_results:
@@ -50,18 +53,28 @@ class Shopee:
             pass
 
         try:
+            # self.wait.until(ec.presence_of_element_located(
+            #     (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
+            # self.wait.until(ec.presence_of_element_located(
+            #     (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"] div[class*="shopee-search-item-result__item"]')), "No items found on this page")
+
             self.wait.until(ec.presence_of_element_located(
-                (By.CSS_SELECTOR, 'div[class="row shopee-search-item-result__items"]')), "No items found on this page")
+                (By.CSS_SELECTOR, 'script[type="application/ld+json"][data-rh="true"]')), "No items found on this page")
+
         except:
             return []
 
         else:
             print(f"Page {start_page}", flush=True)
-            search_results = self.driver.find_element_by_css_selector(
-                'div[class="row shopee-search-item-result__items"]')
+            # search_results = self.driver.find_element_by_css_selector(
+            #     'div[class="row shopee-search-item-result__items"]')
+            #
+            # products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+            self.wait.until(lambda driver: len(driver.find_elements_by_css_selector('script[type="application/ld+json"][data-rh="true"]')) > 1)
 
-            products = search_results.find_elements_by_css_selector('div.shopee-search-item-result__item')
+            products: List[webdriver] = self.driver.find_elements_by_css_selector('script[type="application/ld+json"][data-rh="true"]')
 
+            print(f"size is {len(products)}")
             # For Shop Search
             # search_results = self.driver.find_element_by_css_selector(
             #     'div[class="shop-search-result-view"]')
@@ -69,12 +82,32 @@ class Shopee:
 
             list_of_url = []
 
-            for product in products:
+            for product in products: #type: webelement
+                # try:
+                #     product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                #     list_of_url.append(product_url)
+                # except Exception as err:
+                #     print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+                #     if self.args["debug"]:
+                #         import traceback
+                #         traceback.print_exc(limit=4)
+
                 try:
-                    product_url = product.find_element_by_tag_name('a').get_attribute('href')
-                    list_of_url.append(product_url)
+                    data = json.loads(product.get_attribute('innerHTML').strip())
+                    if (data['@type'].casefold() != 'product'.casefold()):
+                        if self.args["debug"]:
+                            print("Data is not of product type, skipping")
+                        continue
+
+                    list_of_url.append(data['url'])
+
+                    # product_url = product.find_element_by_tag_name('a').get_attribute('href')
+                    # list_of_url.append(product_url)
                 except Exception as err:
                     print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
+                    if self.args["debug"]:
+                        import traceback
+                        traceback.print_exc(limit=4)
 
             return list_of_url
 
@@ -115,13 +148,13 @@ class Shopee:
             d['E-COMMERCE'] = 'SHOPEE'
 
             self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3KP9-e'), ""), "Shop name not found")
-            d['TOKO'] = driver.find_element_by_css_selector('div._3KP9-e').text
+            d['TOKO'] = driver.find_element_by_css_selector('div._3KP9-e').text.strip()
 
             info = driver.find_element_by_css_selector('div[class="_3Wm5aN"]').find_elements_by_css_selector('div[class="_2gVYdB"]')
             location = None
             for loc in info:
-                if "Dikirim Dari".casefold() in loc.text.casefold():
-                    location = loc.text
+                if "Dikirim Dari".casefold() in loc.text.strip().casefold():
+                    location = loc.text.strip()
             if location is not None:
                 location = location.replace("Dikirim Dari", "").replace('\n', '')
             else:
@@ -143,7 +176,7 @@ class Shopee:
             d['KOTA'] =kota or ""
 
             self.wait.until(lambda driver: driver.find_element_by_class_name("_3ZV7fL").text.strip() != '')
-            nama_produk = driver.find_element_by_css_selector('div[class="_3ZV7fL"]').text
+            nama_produk = driver.find_element_by_css_selector('div[class="_3ZV7fL"]').text.strip()
 
             box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
             rbox = re.findall(box_patt, nama_produk)
@@ -160,10 +193,10 @@ class Shopee:
             all_options = []
 
             for i in range(0, len(indiv_container) - 1):
-                indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_13ZEQm"]').text
+                indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_13ZEQm"]').text.strip()
                 indiv_container_options = indiv_container[i].find_element_by_css_selector('div[class="flex items-center _2_WzZ8"]')
                 options = indiv_container_options.find_elements_by_css_selector('button[class*="product-variation"]')
-                textoptions = [a.text for a in options]
+                textoptions = [a.text.strip() for a in options]
                 text = indiv_container_title + ': ' + ', '.join(textoptions)
                 all_options.append(text)
 
@@ -171,7 +204,7 @@ class Shopee:
 
             sold_count_val = driver.find_elements_by_css_selector('div[class="flex _3S-OxK"] div[class="_2gcR05"]')
             if len(sold_count_val) > 0:
-                sol = sold_count_val[0].text
+                sol = sold_count_val[0].text.strip()
                 if 'RB' in sol:
                     sol = sol.replace('RB', '').replace('+', '')
                     if (',' in sol):
@@ -203,14 +236,13 @@ class Shopee:
             elif len(prices) == 2:
                 d['HARGA UNIT TERKECIL'] = f"{prices[0]} - {prices[1]}"
             else:
-                print(driver.find_element_by_css_selector('div[class="AJyN7v"]').text.split())
                 raise NoSuchElementException("    Price not found")
 
             d['VALUE'] = ""
 
             disc = driver.find_elements_by_css_selector('div[class="_3ghar9"]')
             if len(disc) > 0:
-                disc_float = (disc[0].text)[:(disc[0].text).index('%'):]
+                disc_float = (disc[0].text.strip())[:(disc[0].text.strip()).index('%'):]
                 disc = float(disc_float) / 100
             else:
                 disc = ""
@@ -223,7 +255,7 @@ class Shopee:
                 if mall:
                     cat = "OFFICIAL STORE"
                 else:
-                    cat = shop_cat[0].text
+                    cat = shop_cat[0].text.strip()
                     if "Star".casefold() in cat.casefold():
                         cat = "STAR SELLER"
 
@@ -245,12 +277,12 @@ class Shopee:
             d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
             rating_val = driver.find_elements_by_css_selector('div[class="_3WXigY _22cC7R"]')
-            d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text) * 20 if len(
+            d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text.strip()) * 20 if len(
                 rating_val) > 0 else ""
 
             rating_count_val = driver.find_elements_by_css_selector('div[class="_3WXigY"]')
             if len(rating_count_val) > 0:
-                rat = rating_count_val[0].text
+                rat = rating_count_val[0].text.strip()
                 if 'RB' in rat:
                     rat = rat.replace('RB', '').replace(',', '').replace('+', '')
                     rat = int(rat) * 1000
@@ -261,7 +293,7 @@ class Shopee:
 
             d['DILIHAT'] = ""
 
-            d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_36_A1j"]').text
+            d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_36_A1j"]').text.strip()
 
             d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -269,6 +301,9 @@ class Shopee:
         except (NoSuchElementException, WebDriverException) as err:
             print(err)
             self.errors.append(driver.current_url)
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
 
         else:
             self.completed_urls.append(d['SOURCE'])
@@ -278,7 +313,10 @@ class Shopee:
 
     def next_search_page(self, driver: WebDriver) -> int:
         try:
-            driver.implicitly_wait(3)
+
+            self.wait.until(ec.presence_of_element_located(
+                (By.CSS_SELECTOR, 'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')), "No next page")
+
             next_button = driver.find_element_by_css_selector(
                 'button[class="shopee-button-outline shopee-mini-page-controller__next-btn"')
 
@@ -291,7 +329,15 @@ class Shopee:
 
         except TimeoutException as err:
             print(err)
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
+
             return self.NEXT_PAGE_DEAD
 
         except NoSuchElementException:
+            if self.args["debug"]:
+                import traceback
+                traceback.print_exc(limit=4)
+
             return self.NEXT_PAGE_DEAD
