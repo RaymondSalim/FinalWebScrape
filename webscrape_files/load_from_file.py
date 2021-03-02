@@ -26,6 +26,8 @@ class LoadFromFile:
                 self.filetype = "json"
 
             else:
+                if self.args["debug"]:
+                    print(f"Exit code is {sc.ERROR_INVALID_FILE}")
                 sys.exit(sc.ERROR_INVALID_FILE)
 
     def load_file(self):
@@ -46,6 +48,8 @@ class LoadFromFile:
         except FileNotFoundError as err:
             print(err)
             print("File not found")
+            if self.args["debug"]:
+                print(f"Exit code is {sc.ERROR_FILE_NOT_FOUND}")
             sys.exit(sc.ERROR_FILE_NOT_FOUND)
 
     def load_urls_from_scraped_file(self, data):

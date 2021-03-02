@@ -21,6 +21,11 @@ no_headless = parser.add_argument('--no-headless',
                                   action='store_false',
                                   help='[OPTIONAL] start chrome in non-headless mode')
 
+max_consecutive_error = parser.add_argument('--max_error',
+                                    type=int,
+                                    default=5,
+                                    help='[OPTIONAL] start chrome in non-headless mode')
+
 subparsers = parser.add_subparsers(required=True, dest='command')
 
 scrape_parser = subparsers.add_parser('scrape', help="Command to scrape", usage="""
@@ -242,7 +247,7 @@ class Main:
         # Replaces any characters to HTML Charset
         self.args['query_parsed'] = parse.quote(self.args['query'])
 
-    def save_data(self, error=None):
+    def save_data(self, error=None, interrupted=False):
         try:
             driver = self.process.get_driver()
             driver.quit()
@@ -254,6 +259,14 @@ class Main:
         data = proc.data
         errors = proc.errors
         id = self.process.get_ID()
+
+        if self.args["debug"]:
+            print("*******************************************\n")
+            print("Last Four Exceptions")
+            import traceback
+            traceback.print_exc()
+            print("\n*******************************************")
+
         if len(data) > 0:
             if self.args['filename'] == '':
                 # Filename argument is not specified, so filename will be generated
@@ -269,12 +282,14 @@ class Main:
                 print(error)
 
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)
-            handle_class.handle_scrape(data, errors, interrupted=True)
+            handle_class.handle_scrape(data, errors, interrupted=interrupted)
         else:
+            if self.args["debug"]:
+                print(f"Exit code is {sc.SUCCESS_NORESULTS}")
             sys.exit(sc.SUCCESS_NORESULTS)
 
     def handle_sigint(self, signum, frame):
-        self.save_data()
+        self.save_data(interrupted=True)
 
     def main(self):
         try:
@@ -312,16 +327,10 @@ class Main:
                     start.start()
 
                 else:
+                    if self.args["debug"]:
+                        print(f"Exit code is {sc.ERROR_ARGUMENT}")
                     sys.exit(sc.ERROR_ARGUMENT)
-
         except Exception as error:
-            # raise error
-            print(error)
-
-            if self.args["debug"]:
-                import traceback
-                traceback.print_exc()
-
             self.save_data(error=error)
 
 try:

@@ -151,19 +151,27 @@ class Start:
         if start_page > end_page:
             driver.quit()
             print("Start page should be less than end page")
-            sys.exit(-1)
+            if self.args["debug"]:
+                print(f"Exit code is {sc.ERROR_ARGUMENT}")
+            sys.exit(sc.ERROR_ARGUMENT)
 
         self.start_time = datetime.now()
 
         try:
             driver.get(url)
+        # TimeoutExceptions are handled in main.py
+        except TimeoutException as err:
+            raise err
         except WebDriverException as err:
             print(err)
             driver.quit()
             if self.args["debug"]:
+                print("*******************************************\n")
+                print("Last Four Exceptions")
                 import traceback
-                traceback.print_exc(limit=4)
-
+                traceback.print_exc()
+                print("\n*******************************************")
+                print(f"Exit code is {sc.ERROR_NETWORK}")
             sys.exit(sc.ERROR_NETWORK)
         else:
             while start_page <= end_page:
@@ -197,46 +205,57 @@ class Start:
             self.handle_data(data, errors)
 
     def scrape_from_url_list(self, driver, urls: List[str], completed_url=[]):
-            for product in urls:
-                if any(completed in product for completed in completed_url):
-                    print("Item Scraped, Skipping")
-                    if self.args["debug"]:
-                        print(product)
-                    continue
-                try:
-                    # Opens a new tab
-                    driver.execute_script("window.open('');")
+        consecutive_error_count = 0
+        for product in urls:
+            if any(completed in product for completed in completed_url):
+                print("Item Scraped, Skipping")
+                if self.args["debug"]:
+                    print(product)
+                continue
+            # try:
+            # Opens a new tab
+            driver.execute_script("window.open('');")
 
-                    # Gets a list of open tabs
-                    handle = driver.window_handles
+            # Gets a list of open tabs
+            handle = driver.window_handles
 
-                    # Change focus to new tab
-                    driver.switch_to.window(handle[-1])
-                    try:
-                        driver.get(product)
-                        self.process.scrape_product_page(driver)
+            # Change focus to new tab
+            driver.switch_to.window(handle[-1])
+            try:
+                driver.get(product)
+                self.process.scrape_product_page(driver)
 
-                    except TimeoutException as err:
-                        # raise err
-                        if self.args["debug"]:
-                            import traceback
-                            traceback.print_exc(limit=4)
+            except TimeoutException as err:
+                consecutive_error_count += 1
+                if self.args["debug"]:
+                    print("*******************************************\n")
+                    print("Last Four Exceptions")
+                    import traceback
+                    traceback.print_exc()
+                    print("\n*******************************************")
 
-                        self.process.errors.append(product)
+                self.process.errors.append(product)
 
-                    # Closes and switch focus to the main tab
-                    driver.execute_script("window.close();")
-                    handle = driver.window_handles
-                    driver.switch_to.window(handle[0])
-                except WebDriverException as err:
-                    # raise err
-                    if self.args["debug"]:
-                        import traceback
-                        traceback.print_exc(limit=4)
+            else:
+                consecutive_error_count = 0
 
-                    print(err)
-                    continue
+            # There has been 5 errors in a row, exits
+            if consecutive_error_count > self.args['max_error']:
+                raise TimeoutError(f"Job ran into error {self.args['max_error']} consecutive times.")
 
+            # Closes and switch focus to the main tab
+            if (len(driver.window_handles) > 2):
+                driver.execute_script("window.close();")
+            handle = driver.window_handles
+            driver.switch_to.window(handle[0])
+            # except WebDriverException as err:
+            #     # raise err
+            #     if self.args["debug"]:
+            #         import traceback
+            #         traceback.print_exc(limit=4)
+            #
+            #     print(err)
+            #     continue
 
     # Continue functions
     def continue_scrape(self, driver):
@@ -276,14 +295,19 @@ class Start:
             self.ID = 'shopee'
             self.process = Shopee(self.args, driver=driver)
         else:
+            if self.args["debug"]:
+                print(f"Exit code is {sc.ERROR_INVALID_FILE}")
             sys.exit(sc.ERROR_INVALID_FILE)
 
         try:
             self.process.retry_errors(urls=errors)
-        except WebDriverException as err:
+        except (WebDriverException, TimeoutError) as err:
             if self.args["debug"]:
+                print("*******************************************\n")
+                print("Last Four Exceptions")
                 import traceback
-                traceback.print_exc(limit=4)
+                traceback.print_exc()
+                print("\n*******************************************")
             print(err)
 
         data = self.process.get_data()
@@ -306,9 +330,13 @@ class Start:
         elif self.args['command'].casefold() == 'scrapeurl'.casefold():
             sys.stdout = sys.__stdout__
             if len(data) == 0 or len(errors) != 0:
+                if self.args["debug"]:
+                    print(f"Exit code is {sc.SUCCESS_NORESULTS}")
                 sys.exit(sc.SUCCESS_NORESULTS)
             else:
                 print(json.dumps(data))
+                if self.args["debug"]:
+                    print(f"Exit code is {sc.SUCCESS_COMPLETE}")
                 sys.exit(sc.SUCCESS_COMPLETE)
         else:
             handle_class = HandleResult(file_name=self.args['filename'], file_type=self.args['result'], args=self.args)

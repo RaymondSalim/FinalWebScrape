@@ -65,8 +65,11 @@ class Lazada:
             except Exception as err:
                 print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
                 if self.args["debug"]:
+                    print("*******************************************\n")
+                    print("Last Four Exceptions")
                     import traceback
-                    traceback.print_exc(limit=4)
+                    traceback.print_exc()
+                    print("\n*******************************************")
 
         return list_of_url
 
