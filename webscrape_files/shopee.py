@@ -33,12 +33,25 @@ class Shopee:
     def retry_errors(self, urls):
         driver = self.driver
 
+        consecutive_error_count = 0
         for url in urls:
             try:
                 driver.get(url)
                 self.scrape_product_page(driver)
-            except WebDriverException as err:
+            except TimeoutException as err:
+                consecutive_error_count += 1
                 print(err)
+                continue
+            except WebDriverException as err:
+                consecutive_error_count += 1
+                print(err)
+                continue
+            else:
+                consecutive_error_count = 0
+
+            # There has been 5 errors in a row, exits
+            if consecutive_error_count > self.args['max_error']:
+                raise TimeoutError(f"Job ran into error {self.args['max_error']} consecutive times.")
 
         driver.quit()
 
@@ -106,8 +119,11 @@ class Shopee:
                 except Exception as err:
                     print(f"Error in def get_urls_from_search_results\n{err}", flush=True)
                     if self.args["debug"]:
+                        print("*******************************************\n")
+                        print("Last Four Exceptions")
                         import traceback
-                        traceback.print_exc(limit=4)
+                        traceback.print_exc()
+                        print("\n*******************************************")
 
             return list_of_url
 
@@ -302,8 +318,11 @@ class Shopee:
             print(err)
             self.errors.append(driver.current_url)
             if self.args["debug"]:
+                print("*******************************************\n")
+                print("Last Four Exceptions")
                 import traceback
-                traceback.print_exc(limit=4)
+                traceback.print_exc()
+                print("\n*******************************************")
 
         else:
             self.completed_urls.append(d['SOURCE'])
@@ -330,14 +349,20 @@ class Shopee:
         except TimeoutException as err:
             print(err)
             if self.args["debug"]:
+                print("*******************************************\n")
+                print("Last Four Exceptions")
                 import traceback
-                traceback.print_exc(limit=4)
+                traceback.print_exc()
+                print("\n*******************************************")
 
             return self.NEXT_PAGE_DEAD
 
         except NoSuchElementException:
             if self.args["debug"]:
+                print("*******************************************\n")
+                print("Last Four Exceptions")
                 import traceback
-                traceback.print_exc(limit=4)
+                traceback.print_exc()
+                print("\n*******************************************")
 
             return self.NEXT_PAGE_DEAD
