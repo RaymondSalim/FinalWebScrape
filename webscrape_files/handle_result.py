@@ -54,10 +54,12 @@ class HandleResult:
                 print(f"Saved to {path.replace('.csv', '.json')}")
 
             finally:
-                self.save_errors(path, errors, keyword)
+                self.save_errors(path, errors, keyword, hasData=True)
 
         else:
             print("Nothing scraped")
+            if self.args["debug"]:
+                print(f"Exit code is {sc.SUCCESS_NORESULTS}")
             sys.exit(sc.SUCCESS_NORESULTS)
 
     def save_json(self, path, data, errors):
@@ -80,13 +82,15 @@ class HandleResult:
                     dict_writer.writerows(data)
 
             finally:
-                self.save_errors(path, errors, keyword)
+                self.save_errors(path, errors, keyword, hasData=True)
 
         else:
             print("Nothing scraped")
+            if self.args["debug"]:
+                print(f"Exit code is {sc.SUCCESS_NORESULTS}")
             sys.exit(sc.SUCCESS_NORESULTS)
 
-    def save_errors(self, path, errors, keyword):
+    def save_errors(self, path, errors, keyword, hasData=False):
         error = {
             "KEYWORD": keyword,
             "ERRORS": errors
@@ -96,7 +100,14 @@ class HandleResult:
             with open(path, 'w') as outFile:
                 json.dump(error, outFile)
 
+        if hasData:
+            if self.args["debug"]:
+                print(f"Exit code is {sc.ERROR_WITH_RESULTS}")
+            sys.exit(sc.ERROR_WITH_RESULTS)
+
         ec = sc.ERROR_INTERRUPTED if self.interrupted else sc.SUCCESS_COMPLETE
+        if self.args["debug"]:
+            print(f"Exit code is {ec}")
         sys.exit(ec)
 
     def handle_scrape(self, data, errors, interrupted=False):
