@@ -2,10 +2,10 @@ import os
 from pathlib import Path
 import subprocess
 
-allFiles = [file for file in os.listdir(os.path.normpath('./Output/')) if '_continue.' in file]
+allFiles = [file for file in os.listdir(os.path.normpath('./Output/')) if '_continue.' in file or '_retry.' in file]
 
 for f in allFiles:
-    file2 = f.replace('_continue.', '.')
+    file2 = f.replace('_continue.', '.').replace('_retry.', '')
 
     if not Path(f"Output/{file2}").is_file():
         continue
