@@ -280,7 +280,6 @@ class Start:
             self.args['query_parsed'] = parse.quote(keyword)
         else:
             errors = [self.args['url']]
-            self.args['query'] = ''
 
     # TODO CATCH EXCEPTIONS
         if "tokopedia" in errors[0]:

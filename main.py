@@ -21,10 +21,10 @@ no_headless = parser.add_argument('--no-headless',
                                   action='store_false',
                                   help='[OPTIONAL] start chrome in non-headless mode')
 
-max_consecutive_error = parser.add_argument('--max_error',
-                                    type=int,
-                                    default=5,
-                                    help='[OPTIONAL] start chrome in non-headless mode')
+max_consecutive_error = parser.add_argument('--max-error',
+                                            type=int,
+                                            default=5,
+                                            help='[OPTIONAL] number of maximum consecutive errors before exiting')
 
 subparsers = parser.add_subparsers(required=True, dest='command')
 
@@ -99,6 +99,14 @@ scrapeurl_parser.add_argument('-u',
                               metavar='',
                               required=True
                               )
+
+scrapeurl_parser.add_argument('-q',
+                              '--query',
+                              help='[OPTIONAL] keyword for search',
+                              metavar='',
+                              default='',
+                              type=str,
+                              required=False)
 
 retry_parser = subparsers.add_parser('retry', help="Command to retry errors from xxx_errors.json", usage="""
 
@@ -185,18 +193,18 @@ The following arguments are required:
 
 """)
 merge_parser.add_argument('-f1',
-                            '--file-1',
-                            help='[REQUIRED] name of the first file',
-                            type=str,
-                            metavar='',
-                            required=True)
+                          '--file-1',
+                          help='[REQUIRED] name of the first file',
+                          type=str,
+                          metavar='',
+                          required=True)
 
 merge_parser.add_argument('-f2',
-                            '--file-2',
-                            help='[REQUIRED] name of the second file',
-                            type=str,
-                            metavar='',
-                            required=True)
+                          '--file-2',
+                          help='[REQUIRED] name of the second file',
+                          type=str,
+                          metavar='',
+                          required=True)
 
 current_path = (Path(__file__).resolve()).parent
 
@@ -294,9 +302,10 @@ class Main:
     def main(self):
         try:
             if self.args['command'] == 'scrapeurl':
-                # Changes stdout to null
-                f = open(os.devnull, 'w')
-                sys.stdout = f
+                if not self.args["debug"]:
+                    # Changes stdout to null
+                    f = open(os.devnull, 'w')
+                    sys.stdout = f
                 start = Start(args=self.args)
                 self.process = start
                 start.start()
