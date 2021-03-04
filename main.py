@@ -18,7 +18,8 @@ verbose = parser.add_argument('-d', '--debug',
                               help='[OPTIONAL] debugging mode')
 
 no_headless = parser.add_argument('--no-headless',
-                                  action='store_false',
+                                  action='store_true',
+                                  default=False,
                                   help='[OPTIONAL] start chrome in non-headless mode')
 
 max_consecutive_error = parser.add_argument('--max-error',
@@ -34,8 +35,8 @@ The following arguments are required:
 -m / --marketplace      [REQUIRED] the marketplace {tokopedia, bukalapak, shopee}
 -q / --query            [REQUIRED] keyword for search
 -sp / --startpage       [OPTIONAL] (DEFAULT = 1) start scraping from this page number
--ep / --endpage         [REQUIRED] (0 TO SCRAPE ALL PAGES) scrape until this page number
--r / --result           [REQUIRED] the file format for the results {csv, json}
+-ep / --endpage         [OPTIONAL] (DEFAULT = 0) (0 TO SCRAPE ALL PAGES) scrape until this page number
+-r / --result           [OPTIONAL] (DEFAULT = csv) the file format for the results {csv, json}
 -f / --filename         [OPTIONAL] the name of the final output
 
 """)
@@ -64,17 +65,19 @@ scrape_parser.add_argument('-sp',
 
 scrape_parser.add_argument('-ep',
                            '--endpage',
-                           help='[REQUIRED] scrape until this page number',
+                           help='[OPTIONAL] scrape until this page number',
                            metavar='',
                            type=int,
-                           required=True)
+                           default=0,
+                           required=False)
 
 scrape_parser.add_argument('-r',
                            '--result',
-                           help='[REQUIRED] the file format for the results',
+                           help='[OPTIONAL] the file format for the results',
                            metavar='',
                            type=str.lower,
-                           required=True,
+                           required=False,
+                           default='csv',
                            choices=['csv', 'json']
                            )
 
@@ -112,7 +115,7 @@ retry_parser = subparsers.add_parser('retry', help="Command to retry errors from
 
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the file containing the errors
--r / --result           [REQUIRED] the file format for the results {csv, json}
+-r / --result           [OPTIONAL] (DEFAULT = csv) the file format for the results {csv, json}
 
 Either -f or -r has to be present
 
@@ -125,10 +128,11 @@ retry_parser.add_argument('-f',
                           required=True)
 retry_parser.add_argument('-r',
                           '--result',
-                          help='[REQUIRED] the file format for the results',
+                          help='[OPTIONAL] the file format for the results',
                           metavar='',
                           type=str.lower,
-                          required=True,
+                          required=False,
+                          default='csv',
                           choices=['csv', 'json']
                           )
 
@@ -150,8 +154,8 @@ continue_parser = subparsers.add_parser('continue', help="Command to continue sc
 The following arguments are required:
 -f / --filename         [REQUIRED] name of the incomplete job file
 -sp / --startpage       [OPTIONAL] (DEFAULT = 1) start scraping from this page number
--ep / --endpage         [REQUIRED] scrape until this page number
--r / --result           [REQUIRED] the file format for the results {csv, json}
+-ep / --endpage         [OPTIONAL] (DEFAULT = 0) (0 TO SCRAPE ALL PAGES) scrape until this page number
+-r / --result           [OPTIONAL] (DEFAULT = csv) the file format for the results {csv, json}
 
 """)
 continue_parser.add_argument('-f',
@@ -171,17 +175,19 @@ continue_parser.add_argument('-sp',
 
 continue_parser.add_argument('-ep',
                              '--endpage',
-                             help='[REQUIRED] scrape until this page number',
+                             help='[OPTIONAL] scrape until this page number',
                              metavar='',
                              type=int,
-                             required=True)
+                             default=0,
+                             required=False)
 
 continue_parser.add_argument('-r',
                              '--result',
-                             help='[REQUIRED] the file format for the results',
+                             help='[OPTIONAL] the file format for the results',
                              metavar='',
                              type=str.lower,
-                             required=True,
+                             required=False,
+                             default='csv',
                              choices=['csv', 'json']
                              )
 

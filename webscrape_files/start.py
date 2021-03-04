@@ -61,7 +61,7 @@ class Start:
 
         chrome_options = webdriver.ChromeOptions()
         # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\Chrome.exe"
-        chrome_options.headless = self.args['no_headless']
+        chrome_options.headless = not self.args['no_headless']
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument('--log-level=3')
         chrome_options.add_argument("--disable-gpu")
