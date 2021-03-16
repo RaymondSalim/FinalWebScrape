@@ -87,7 +87,6 @@ class Shopee:
 
             products: List[webdriver] = self.driver.find_elements_by_css_selector('script[type="application/ld+json"][data-rh="true"]')
 
-            print(f"size is {len(products)}")
             # For Shop Search
             # search_results = self.driver.find_element_by_css_selector(
             #     'div[class="shop-search-result-view"]')
@@ -163,10 +162,10 @@ class Shopee:
             d['FARMASI'] = ""
             d['E-COMMERCE'] = 'SHOPEE'
 
-            self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3KP9-e'), ""), "Shop name not found")
-            d['TOKO'] = driver.find_element_by_css_selector('div._3KP9-e').text.strip()
+            self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'div._3uf2ae'), ""), "Shop name not found")
+            d['TOKO'] = driver.find_element_by_css_selector('div._3uf2ae').text.strip()
 
-            info = driver.find_element_by_css_selector('div[class="_3Wm5aN"]').find_elements_by_css_selector('div[class="_2gVYdB"]')
+            info = driver.find_element_by_css_selector('div[class="_1afiLm"]').find_elements_by_css_selector('div[class="aPKXeO"]')
             location = None
             for loc in info:
                 if "Dikirim Dari".casefold() in loc.text.strip().casefold():
@@ -191,8 +190,8 @@ class Shopee:
 
             d['KOTA'] =kota or ""
 
-            self.wait.until(lambda driver: driver.find_element_by_class_name("_3ZV7fL").text.strip() != '')
-            nama_produk = driver.find_element_by_css_selector('div[class="_3ZV7fL"]').text.strip()
+            self.wait.until(lambda driver: driver.find_element_by_class_name("attM6y").text.strip() != '')
+            nama_produk = driver.find_element_by_css_selector('div[class="attM6y"]').text.strip()
 
             box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
             rbox = re.findall(box_patt, nama_produk)
@@ -203,14 +202,14 @@ class Shopee:
 
             d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
 
-            range_container = driver.find_element_by_css_selector('div[class="flex _1nb0l8 _2J8-Qs"]')
+            range_container = driver.find_element_by_css_selector('div[class="flex _3AHLrn _2XdAdB"]')
             indiv_container = range_container.find_elements_by_css_selector('div[class="flex items-center"]')
 
             all_options = []
 
             for i in range(0, len(indiv_container) - 1):
-                indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_13ZEQm"]').text.strip()
-                indiv_container_options = indiv_container[i].find_element_by_css_selector('div[class="flex items-center _2_WzZ8"]')
+                indiv_container_title = indiv_container[i].find_element_by_css_selector('label[class="_2IW_UG"]').text.strip()
+                indiv_container_options = indiv_container[i].find_element_by_css_selector('div[class="flex items-center _2oeDUI"]')
                 options = indiv_container_options.find_elements_by_css_selector('button[class*="product-variation"]')
                 textoptions = [a.text.strip() for a in options]
                 text = indiv_container_title + ': ' + ', '.join(textoptions)
@@ -218,7 +217,7 @@ class Shopee:
 
             d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
 
-            sold_count_val = driver.find_elements_by_css_selector('div[class="flex _3S-OxK"] div[class="_2gcR05"]')
+            sold_count_val = driver.find_elements_by_css_selector('div[class="flex _210dTF"] div[class="aca9MM"]')
             if len(sold_count_val) > 0:
                 sol = sold_count_val[0].text.strip()
                 if 'RB' in sol:
@@ -233,13 +232,13 @@ class Shopee:
             else:
                 d['JUAL (UNIT TERKECIL)'] = ""
 
-            prices = driver.find_elements_by_css_selector('div[class="bBOoii"]')
-            self.wait.until(lambda driver : driver.find_element_by_css_selector('div[class="AJyN7v"]').text.split() != '')
+            prices = driver.find_elements_by_css_selector('div[class="_28heec"]')
+            self.wait.until(lambda driver : driver.find_element_by_css_selector('div[class="_3e_UQT"]').text.split() != '')
 
             if len(prices) > 0:
                 prices = prices[0].text.split()
             else:
-                prices = (driver.find_element_by_css_selector('div[class="AJyN7v"]').text.split())
+                prices = (driver.find_element_by_css_selector('div[class="_3e_UQT"]').text.split())
 
             prices = [val.replace('.', '').replace('Rp', '') for val in prices]
             try:
@@ -256,7 +255,7 @@ class Shopee:
 
             d['VALUE'] = ""
 
-            disc = driver.find_elements_by_css_selector('div[class="_3ghar9"]')
+            disc = driver.find_elements_by_css_selector('div[class="_2dyNDF"]')
             if len(disc) > 0:
                 disc_float = (disc[0].text.strip())[:(disc[0].text.strip()).index('%'):]
                 disc = float(disc_float) / 100
@@ -265,7 +264,7 @@ class Shopee:
 
             d['% DISC'] = disc
 
-            shop_cat = driver.find_elements_by_css_selector('div[class="_1a3MJ7"]')
+            shop_cat = driver.find_elements_by_css_selector('div[class="SK--cp"]')
             if len(shop_cat) > 0:
                 mall = len(shop_cat[0].find_elements_by_css_selector('div[class="official-shop-new-badge"]')) > 0
                 if mall:
@@ -292,11 +291,11 @@ class Shopee:
 
             d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
-            rating_val = driver.find_elements_by_css_selector('div[class="_3WXigY _22cC7R"]')
+            rating_val = driver.find_elements_by_css_selector('div[class="OitLRu _1mYa1t"]')
             d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating_val[0].text.strip()) * 20 if len(
                 rating_val) > 0 else ""
 
-            rating_count_val = driver.find_elements_by_css_selector('div[class="_3WXigY"]')
+            rating_count_val = driver.find_elements_by_css_selector('div[class="OitLRu"]')
             if len(rating_count_val) > 0:
                 rat = rating_count_val[0].text.strip()
                 if 'RB' in rat:
@@ -309,7 +308,7 @@ class Shopee:
 
             d['DILIHAT'] = ""
 
-            d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_36_A1j"]').text.strip()
+            d['DESKRIPSI'] = driver.find_element_by_css_selector('div[class="_3yZnxJ"]').text.strip()
 
             d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
