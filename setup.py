@@ -12,6 +12,7 @@ driver_path = str(os.path.dirname(os.path.realpath(__file__)))
 driver_success = False
 pip_success = False
 os_is_windows = False
+error = None
 
 
 def get_url(version):
@@ -24,6 +25,8 @@ def get_url(version):
         return 'https://chromedriver.storage.googleapis.com/87.0.4280.20/'
     elif "88" == version:
         return 'https://chromedriver.storage.googleapis.com/88.0.4324.27/'
+    elif "89" == version:
+        return 'https://chromedriver.storage.googleapis.com/89.0.4389.23/'
 
 
 def extract_zip():
@@ -50,7 +53,7 @@ def install_requirements():
 
 
 def check_status():
-    global driver_success, pip_success, operating_system, err
+    global driver_success, pip_success, operating_system, error
     if driver_success and pip_success:
         print("*********************")
         print("* Setup Successful! *")
@@ -70,10 +73,11 @@ def check_status():
                 webbrowser.open('https://chromedriver.storage.googleapis.com/')
                 sys.exit(-1)
             else:
-                if "command not found".casefold() in str(err).casefold() or "No such file".casefold() in str(err).casefold():
+                if "command not found".casefold() in str(error).casefold() or "No such file".casefold() in str(error).casefold():
                     print("Google chrome not found, please ensure you have google chrome installed")
                 else:
-                    print(err)
+                    raise error
+                    print(error)
                 sys.exit(-1)
 
         elif not pip_success:
@@ -123,6 +127,7 @@ else:
         proc1 = subprocess.run(['google-chrome-stable', '--version'], stdout=subprocess.PIPE)
         proc2 = subprocess.run(["grep", "-Eo", "[0-9.]+"], input=proc1.stdout, stdout=subprocess.PIPE)
         version = proc2.stdout.decode('utf-8')
+        print(f"Detected google chrome version: {version.strip()}")
         dl_url = get_url(version) + 'chromedriver_linux64.zip'
 
         subprocess.run(['curl', '-#', dl_url, '--output', 'cd.zip'])
@@ -144,7 +149,7 @@ else:
         driver_success = True
 
     except Exception as err:
-        pass
+        error = err
     finally:
         install_requirements()
 
