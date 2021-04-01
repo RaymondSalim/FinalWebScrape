@@ -15,12 +15,13 @@ class Tokopedia:
     NEXT_PAGE_EXISTS = 1
     timeout_limit = 10
 
-    def __init__(self, args, driver, completed_urls=[]):
+    def __init__(self, args, driver, config=dict(), completed_urls=[]):
         self.args = args
         self.data = []
         self.errors = []
         self.completed_urls = completed_urls
         self.scraped_count = 0
+        self.config = config
 
         self.driver = driver
         self.wait = WebDriverWait(driver, self.timeout_limit)
@@ -44,7 +45,7 @@ class Tokopedia:
             else:
                 consecutive_error_count = 0
 
-            # There has been 5 errors in a row, exits
+            # There has been 5 consecutive errors in a row, exits
             if consecutive_error_count > self.args['max_error']:
                 raise TimeoutError(f"Job ran into error {self.args['max_error']} consecutive times.")
 
@@ -52,8 +53,9 @@ class Tokopedia:
 
 
     def get_urls_from_search_results(self, start_page) -> List[str]:
+        c = self.config
         try:
-            has_results = self.driver.find_element_by_css_selector('button[data-testid="btnSRPChangeKeyword"]').text
+            has_results = self.driver.find_element_by_css_selector(c["extras"]["search_page_has_results"]).text
             if "Ganti kata kunci" in has_results:
                 print("No results found, try another query?")
                 return []
@@ -61,8 +63,8 @@ class Tokopedia:
             pass
 
         print(f"Page {start_page}", flush=True)
-        search_results = self.driver.find_element_by_css_selector('div[data-testid="divSRPContentProducts"]')
-        products = search_results.find_elements_by_class_name('pcv3__info-content')
+        search_results = self.driver.find_element_by_css_selector(c["extras"]["search_page_data_container"])
+        products = search_results.find_elements_by_class_name(c["extras"]["search_page_data"])
         
         list_of_url = []
 
@@ -90,6 +92,7 @@ class Tokopedia:
         return self.errors
 
     def scrape_product_page(self, driver: WebDriver):
+        c = self.config
         # try:
         #     self.wait.until_not(ec.url_contains("ta.tokopedia"))
         #
@@ -110,7 +113,7 @@ class Tokopedia:
         #
         # else:
         is_page_valid = driver.find_elements_by_css_selector(
-            'h1[class="css-6hac5w-unf-heading e1qvo2ff1"]')  # Required to check if product page is valid
+            c["extras"]["page_is_valid"])  # Required to check if product page is valid
 
         if len(is_page_valid) > 0:
             return
@@ -139,15 +142,15 @@ class Tokopedia:
             d['E-COMMERCE'] = 'TOKOPEDIA'
 
             # self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, 'a[data-testid="llbPDPFooterShopName"]'), "Shop name not found"))
-            self.wait.until(lambda driver:driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text.split() != '', "Shop name not found")
-            d['TOKO'] = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]').text.strip()
+            self.wait.until(lambda driver:driver.find_element_by_css_selector(c["seller_info"]["seller_name"]).text.split() != '', "Shop name not found")
+            d['TOKO'] = driver.find_element_by_css_selector(c["seller_info"]["seller_name"]).text.strip()
             driver.implicitly_wait(0)
 
             # self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-testid="lblPDPSellerOrigin"]')))
             # self.wait.until(ec.presence_of_element_located((By.ID, 'pdp_comp-shipping')))
             # location = driver.find_element_by_css_selector('div[data-testid="lblPDPSellerOrigin"]').text
             # location = location[13::]  # Removes "Dikirim Dari"
-            location = driver.find_element_by_css_selector('meta[name="twitter:data2"]').get_attribute('content')
+            location = driver.find_element_by_css_selector(c["seller_info"]["location"]).get_attribute('content')
             d['ALAMAT'] = location
 
             kota = None
@@ -165,7 +168,7 @@ class Tokopedia:
 
             d['KOTA'] = kota or ""
 
-            nama_produk = driver.find_element_by_css_selector('h1[data-testid="lblPDPDetailProductName"]').text.strip()
+            nama_produk = driver.find_element_by_css_selector(c["product_info"]["title"]).text.strip()
 
             box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
             rbox = re.findall(box_patt, nama_produk)
@@ -178,7 +181,7 @@ class Tokopedia:
 
             range_data = []
             ignored_containers = ['HARGA', 'JUMLAH', 'PROMO', 'INFO PRODUK', 'ONGKOS KIRIM']
-            range_containers = driver.find_elements_by_css_selector('div[class="css-8atqhb"]')
+            range_containers = driver.find_elements_by_css_selector(c["product_info"]["options"]["individual_container"])
 
             """
             Selenium are not able to get text of elements not displayed (e.g dropdowns)
@@ -191,13 +194,13 @@ class Tokopedia:
             """)
 
             for i in range(0, len(range_containers)):
-                range_title = range_containers[i].find_elements_by_css_selector('div[data-testid*="pdpVariantTitle"] span')
+                range_title = range_containers[i].find_elements_by_css_selector(c["product_info"]["options"]["individual_container_title"])
                 if len(range_title) > 0:
                     if range_title[0].text.strip() in ignored_containers:
                         continue
                     else:
                         title = range_title[0].text.strip()
-                        range_options_container = range_containers[i].find_elements_by_css_selector('[data-testid*="pdpVariantItemLevel"]')
+                        range_options_container = range_containers[i].find_elements_by_css_selector(c["product_info"]["options"]["individual_container_items_container_items"])
 
                         options = []
                         for j in range(0, len(range_options_container)):
@@ -216,7 +219,7 @@ class Tokopedia:
             d['RANGE'] = '; '.join(range_data)
 
             sold_count_valid = driver.find_elements_by_css_selector(
-                'div[data-testid="lblPDPDetailProductSoldCounter"]')
+               c["product_info"]["sold_count"])
             sold_count = sold_count_valid[0].text.strip() if len(sold_count_valid) > 0 else ""
             if ("barang berhasil terjual".casefold() in sold_count.casefold()):
                 x = re.search('(\d+)', sold_count)
@@ -230,20 +233,20 @@ class Tokopedia:
             d['JUAL (UNIT TERKECIL)'] = int(sold_count) if len(sold_count_valid) > 0 else ""
 
 
-            discount = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailOriginalPrice"]')
+            discount = driver.find_elements_by_css_selector(c["product_info"]["price"]["price_before_discount"])
             if len(discount) > 0:
                 d['HARGA UNIT TERKECIL'] = int((discount[0].text.strip()[2::]).replace(".", ""))
             else:
-                price = driver.find_element_by_css_selector('div[data-testid="lblPDPDetailProductPrice"]').text.strip()
+                price = driver.find_element_by_css_selector(c["product_info"]["price"]["price_without_discount"]).text.strip()
                 d['HARGA UNIT TERKECIL'] = int((price[2::]).replace(".", ""))
 
             d['VALUE'] = ""
 
-            discount = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailDiscountPercentage"]')
+            discount = driver.find_elements_by_css_selector(c["product_info"]["price"]["discount_percentage"])
             d['% DISC'] = float(discount[0].text.strip().replace('%',''))/100 if len(discount) > 0 else ""
 
-            shop_container = driver.find_element_by_css_selector('a[data-testid="llbPDPFooterShopName"]')
-            shop_category = shop_container.find_elements_by_css_selector('img[data-testid*="pdpShopBadge"]')
+            shop_container = driver.find_element_by_css_selector(c["seller_info"]["seller_name"])
+            shop_category = shop_container.find_elements_by_css_selector(c["seller_info"]["category"])
             if len(shop_category) > 0:
                 shop_category = shop_category[0].get_attribute('alt')
                 if shop_category.casefold() == "Official Store".casefold():
@@ -265,11 +268,11 @@ class Tokopedia:
 
             d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
-            rating = driver.find_elements_by_css_selector('span[data-testid="lblPDPDetailProductRatingNumber"]')
+            rating = driver.find_elements_by_css_selector(c["product_info"]["rating"]["rating_value"])
             d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text.strip())*20 if len(rating) > 0 else ""
 
             rating_total = driver.find_elements_by_css_selector(
-                'span[data-testid="lblPDPDetailProductRatingCounter"]')
+                c["product_info"]["rating"]["rating_count"])
             rating_total = rating_total[0].text.strip().replace('(','').replace(',','').replace('.', '').replace(' ulasan)', '') if len(rating_total) > 0 else ""
             if "rb" in rating_total:
                 rating_total = rating_total.replace('rb','')
@@ -290,7 +293,7 @@ class Tokopedia:
             # self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-testid="lblPDPDescriptionProduk"]')), "Description not found, skipping")
 
             desc = driver.find_elements_by_css_selector(
-                'div[data-testid="lblPDPDescriptionProduk"]')
+                c["product_info"]["description"])
             d['DESKRIPSI'] = desc[0].text if len(desc) > 0 else "Tidak ada Deskripsi"
 
             d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -314,15 +317,16 @@ class Tokopedia:
             print(f"    Item #{self.scraped_count} completed")
 
     def next_search_page(self, driver: WebDriver) -> int:
+        c = self.config
         try:
             driver.implicitly_wait(3)
-            next_button = driver.find_element_by_css_selector('button[aria-label="Halaman berikutnya"]')
+            next_button = driver.find_element_by_css_selector(c["extras"]["next_page_btn"])
 
             if next_button.is_enabled():
                 print("Next page")
                 next_button.click()
 
-                self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'pcv3__info-content')),
+                self.wait.until(ec.presence_of_element_located((By.CLASS_NAME,c["extras"]["search_page_data"])),
                                 'Items not found in this page')
 
                 return self.NEXT_PAGE_EXISTS

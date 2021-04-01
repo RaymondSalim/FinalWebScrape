@@ -26,6 +26,7 @@ class Start:
     args = []
     driver_dir = None
     process = None
+    config = None
 
     NEXT_PAGE_DEAD = 0
     NEXT_PAGE_EXISTS = 1
@@ -35,6 +36,7 @@ class Start:
         marketplace = args.get('marketplace', None)
         self.ID = marketplace.lower() if marketplace is not None else ""
         self.get_driver_dir()
+        self.read_config()
 
     def get_process(self):
         return self.process
@@ -131,14 +133,14 @@ class Start:
                 end_page = 100
 
             url = f"https://www.bukalapak.com/products?page={start_page}&search%5Bkeywords%5D={self.args['query_parsed']}"
-            self.process = Bukalapak(args=self.args, driver=driver, completed_urls=completed_url)
+            self.process = Bukalapak(args=self.args, driver=driver, config=self.config["bukalapak"], completed_urls=completed_url)
 
         else:
             end_page = self.args['endpage'] if self.args['endpage'] != 0 else 9999
             if (self.ID.casefold() == 'shopee'.casefold()):
                 url = f"https://shopee.co.id/search?page={start_page - 1}&keyword={self.args['query_parsed']}"
                 # url = f"https://shopee.co.id/shop/17326605/search"
-                self.process = Shopee(args=self.args, driver=driver, completed_urls=completed_url)
+                self.process = Shopee(args=self.args, driver=driver, config=self.config["shopee"], completed_urls=completed_url)
 
             elif (self.ID.casefold() == 'lazada'.casefold()):
                 url = "https://www.lazada.co.id/kalbe-consumer-health/?from=wangpu&lang=id&langFlag=id&page=1&pageTypeId=2&q=All-Products"
@@ -146,7 +148,7 @@ class Start:
 
             elif (self.ID.casefold() == 'tokopedia'.casefold()):
                 url = f"https://www.tokopedia.com/search?page={start_page}&q={self.args['query_parsed']}"
-                self.process = Tokopedia(args=self.args, driver=driver, completed_urls=completed_url)
+                self.process = Tokopedia(args=self.args, driver=driver, config=self.config["tokopedia"], completed_urls=completed_url)
 
         if start_page > end_page:
             driver.quit()
@@ -284,15 +286,15 @@ class Start:
     # TODO CATCH EXCEPTIONS
         if "tokopedia" in errors[0]:
             self.ID = 'tokopedia'
-            self.process = Tokopedia(self.args, driver=driver)
+            self.process = Tokopedia(self.args, config=self.config["tokopedia"], driver=driver)
 
         elif "bukalapak" in errors[0]:
             self.ID = 'bukalapak'
-            self.process = Bukalapak(self.args, driver=driver)
+            self.process = Bukalapak(self.args, config=self.config["bukalapak"], driver=driver)
 
         elif "shopee" in errors[0]:
             self.ID = 'shopee'
-            self.process = Shopee(self.args, driver=driver)
+            self.process = Shopee(self.args, config=self.config["shopee"], driver=driver)
         else:
             if self.args["debug"]:
                 print(f"Exit code is {sc.ERROR_INVALID_FILE}")
@@ -363,3 +365,11 @@ class Start:
 
         hr = HandleResult(file_path=self.args['path'], args=self.args)
         hr.handle_merge(combinedData)
+
+    def read_config(self):
+        curr_path = (Path(__file__).resolve()).parent
+        config_path = Path('config.json')
+        config_path = curr_path.joinpath(config_path)
+
+        file = open(config_path)
+        self.config = json.load(file)

@@ -1,0 +1,161 @@
+{
+  "shopee": {
+      "seller_info": {
+          "seller_name": "div._3uf2ae",
+          "category": "div[class=\"official-shop-new-badge\"]",
+          "location": ""
+      },
+      "product_info": {
+          "title": "div[class=\"attM6y\"]",
+          "rating": {
+              "rating_value": "div[class=\"OitLRu _1mYa1t\"]",
+              "rating_count": "div[class=\"OitLRu\"]"
+          },
+          "price": {
+              "original": "div[class=\"_3e_UQT\"]",
+              "discount_percentage": "div[class=\"_2dyNDF\"]",
+              "price_before_discount": "div[class=\"_28heec\"]"
+          },
+          "sold_count": "div[class=\"flex _210dTF\"] div[class=\"aca9MM\"]",
+          "description": "div[class=\"_3yZnxJ\"]",
+          "options": {
+              "all_options_containers": "div[class=\"flex _3AHLrn _2XdAdB\"]",
+              "individual_container": "div[class=\"flex items-center\"]",
+              "individual_container_title": "label[class=\"_2IW_UG\"]",
+              "individual_container_items_container": "div[class=\"flex items-center _2oeDUI\"]",
+              "individual_container_items_container_items": "button[class*=\"product-variation\"]"
+          }
+      },
+      "extras": {
+          "page_is_valid": "div.page-product",
+          "product_doesnt_exist": "div[class=\"product-not-exist__content\"]",
+          "product_specs": "div[class=\"_1afiLm\"]",
+          "product_specs_child": "div[class=\"aPKXeO\"]",
+          "shop_category_container": "div[class=\"SK--cp\"]",
+          "search_page_has_results": "div[class=\"shopee-search-result-header__text\"]",
+          "search_page_data": "script[type=\"application/ld+json\"][data-rh=\"true\"]",
+
+          "next_page_btn": "button[class=\"shopee-button-outline shopee-mini-page-controller__next-btn\""
+      }
+  },
+  "bukalapak": {
+    "seller_info": {
+      "seller_name": "a[class=\"c-link--primary--black\"]",
+      "category": "div[class=\"c-seller__badges\"]",
+      "location": "a[class=\"c-seller__city u-mrgn-bottom--2\"]"
+    },
+    "product_info": {
+      "title": "h1[class=\"c-main-product__title u-txt--large\"]",
+      "rating": {
+        "rating_value": "span[class=\"summary__score\"]",
+        "rating_count": ""
+      },
+      "price": {
+        "original": "div.c-main-product__price",
+        "discount_percentage": "span[class=\"c-main-product__price__discount-percentage\"]",
+        "price_before_discount": ""
+      },
+      "sold_count": "",
+      "description": "div[class=\"c-information__description-txt\"]",
+      "options": {
+        "all_options_containers": "div.c-main-product__variant.c-main-product__separator",
+        "individual_container": "div.c-main-product__variant__item",
+        "individual_container_title": "div.c-main-product__label",
+        "individual_container_items_container": "",
+        "individual_container_items_container_items": "div.c-main-product__variant__item .multiselect__element>span>span"
+      }
+    },
+    "extras": {
+      "page_is_valid": "h1[class=\"u-fg--ash-light u-txt--bold\"]",
+      "product_doesnt_exist": "",
+      "product_specs": "",
+      "product_specs_child": "",
+      "shop_category_container": "",
+      "search_page_has_results": "p[class=\"mb-8 bl-text bl-text--subheading-1\"]",
+      "search_page_has_results_2_xpath": "//div[@class=\"bl-product-card__thumbnail\"]//*//a",
+      "search_page_data": "div[class=\"bl-product-card__description\"]",
+      "seller_info_container": "div.c-seller__info",
+      "product_info_container": "div[id=\"section-informasi-barang\"]",
+      "rating_container": "div.c-main-product__reviews",
+      "shop_category_bukamall": "div.c-main-product__head .bukamall",
+      "shop_category_super_seller": "div[class*=\"c-badges__new-super-seller\"]"
+    }
+  },
+  "tokopedia": {
+    "seller_info": {
+      "seller_name": "a[data-testid=\"llbPDPFooterShopName\"]",
+      "category": "img[data-testid*=\"pdpShopBadge\"]",
+      "location": "meta[name=\"twitter:data2\"]"
+    },
+    "product_info": {
+      "title": "h1[data-testid=\"lblPDPDetailProductName\"]",
+      "rating": {
+        "rating_value": "span[data-testid=\"lblPDPDetailProductRatingNumber\"]",
+        "rating_count": "span[data-testid=\"lblPDPDetailProductRatingCounter\"]"
+      },
+      "price": {
+        "price_without_discount": "div[data-testid=\"lblPDPDetailProductPrice\"]",
+        "discount_percentage": "span[data-testid=\"lblPDPDetailDiscountPercentage\"]",
+        "price_before_discount": "span[data-testid=\"lblPDPDetailOriginalPrice\"]"
+      },
+      "sold_count": "div[data-testid=\"lblPDPDetailProductSoldCounter\"]",
+      "description": "div[data-testid=\"lblPDPDescriptionProduk\"]",
+      "options": {
+        "all_options_containers": "",
+        "individual_container": "div[class=\"css-8atqhb\"]",
+        "individual_container_title": "div[data-testid*=\"pdpVariantTitle\"] span",
+        "individual_container_items_container": "",
+        "individual_container_items_container_items": "[data-testid*=\"pdpVariantItemLevel\"]"
+      }
+    },
+    "extras": {
+      "page_is_valid": "h1[class=\"css-6hac5w-unf-heading e1qvo2ff1\"]",
+      "product_doesnt_exist": "",
+      "product_specs": "",
+      "product_specs_child": "",
+      "shop_category_container": "",
+      "search_page_has_results": "button[data-testid=\"btnSRPChangeKeyword\"]",
+      "search_page_data_container": "div[data-testid=\"divSRPContentProducts\"]",
+      "search_page_data": "pcv3__info-content",
+
+      "next_page_btn": "button[aria-label=\"Halaman berikutnya\"]"
+    }
+  },
+  "template": {
+    "seller_info": {
+      "seller_name": "",
+      "category": ""
+    },
+    "product_info": {
+      "title": "",
+      "rating": {
+        "rating_value": "",
+        "rating_count": ""
+      },
+      "price": {
+        "original": "",
+        "discount_percentage": "",
+        "price_before_discount": ""
+      },
+      "sold_count": "",
+      "description": "",
+      "options": {
+        "all_options_containers": "",
+        "individual_container": "",
+        "individual_container_title": "",
+        "individual_container_items_container": "",
+        "individual_container_items_container_items": ""
+      }
+    },
+    "extras": {
+      "page_is_valid": "",
+      "product_doesnt_exist": "",
+      "product_specs": "",
+      "product_specs_child": "",
+      "shop_category_container": "",
+      "search_page_has_results": "",
+      "search_page_data": "",
+      "next_page_btn": ""
+    }
+  }
+}
