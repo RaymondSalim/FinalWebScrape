@@ -14,12 +14,13 @@ class Bukalapak:
     NEXT_PAGE_DEAD = 0
     NEXT_PAGE_EXISTS = 1
 
-    def __init__(self, args, driver, completed_urls=[]):
+    def __init__(self, args, driver, config=dict(), completed_urls=[]):
         self.args = args
         self.data = []
         self.errors = []
         self.completed_urls = completed_urls
         self.scraped_count = 0
+        self.config = config
 
         self.driver = driver
         self.wait = WebDriverWait(driver, self.timeout_limit)
@@ -50,8 +51,9 @@ class Bukalapak:
         driver.quit()
 
     def get_urls_from_search_results(self, start_page) -> List[str]:
+        c = self.config
         try:
-            has_results = self.driver.find_element_by_css_selector('p[class="mb-8 bl-text bl-text--subheading-1"]').text
+            has_results = self.driver.find_element_by_css_selector(c["extras"]["search_page_has_results"]).text
             if "Maaf, barangnya tidak ketemu" in has_results:
                 print("No results found, try another query?")
                 return []
@@ -60,7 +62,7 @@ class Bukalapak:
 
         try:
             self.wait.until(
-                ec.presence_of_element_located((By.XPATH, '//div[@class="bl-product-card__thumbnail"]//*//a')),
+                ec.presence_of_element_located((By.XPATH, c["extras"]["search_page_has_results_2_xpath"])),
                 "No items found on this page")
 
         except TimeoutException:
@@ -68,7 +70,7 @@ class Bukalapak:
 
         else:
             print(f"Page {start_page}", flush=True)
-            products = self.driver.find_elements_by_css_selector('div[class="bl-product-card__description"]')
+            products = self.driver.find_elements_by_css_selector(c["extras"]["search_page_data"])
 
             list_of_url = []
 
@@ -95,8 +97,9 @@ class Bukalapak:
         return self.errors
 
     def scrape_product_page(self, driver: WebDriver):
+        c = self.config
         try:
-            self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[id="section-informasi-barang"]')),
+            self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, c["extras"]["product_info_container"])),
                             "Page timeout")
 
         except TimeoutException as err:
@@ -105,7 +108,7 @@ class Bukalapak:
             return
 
         else:
-            is_page_valid = driver.find_elements_by_css_selector('h1[class="u-fg--ash-light u-txt--bold"]')
+            is_page_valid = driver.find_elements_by_css_selector(c["extras"]["page_is_valid"])
             if len(is_page_valid) > 0:
                 return
 
@@ -122,10 +125,10 @@ class Bukalapak:
                 d['FARMASI'] = ""
                 d['E-COMMERCE'] = 'BUKALAPAK'
 
-                shop = driver.find_element_by_class_name('c-seller__info')
-                d['TOKO'] = shop.find_element_by_css_selector('a[class="c-link--primary--black"]').text.strip()
+                shop = driver.find_element_by_css_selector(c["extras"]["seller_info_container"])
+                d['TOKO'] = shop.find_element_by_css_selector(c["seller_info"]["seller_name"]).text.strip()
 
-                location = driver.find_element_by_css_selector('a[class="c-seller__city u-mrgn-bottom--2"]').text.strip()
+                location = driver.find_element_by_css_selector(c["seller_info"]["location"]).text.strip()
                 d['ALAMAT'] = location
 
                 kota = None
@@ -144,7 +147,7 @@ class Bukalapak:
                 d['KOTA'] = kota or ""
 
                 nama_produk = driver.find_element_by_css_selector(
-                    'h1[class="c-main-product__title u-txt--large"]').text.strip()
+                    c["product_info"]["title"]).text.strip()
 
                 box_patt = "(?i)((?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]+[0-9,]*[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|([0-9,]{1,6}[ ]?(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule|gr|gram|kg\b))|((?:(?:\bbox|isi|dus|eceran|strip|bundle|paket|pack|tablet|kapsul|capsule\b)[ ]?)+[0-9,]{1,6})"
                 rbox = re.findall(box_patt, nama_produk)
@@ -155,9 +158,41 @@ class Bukalapak:
 
                 d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
 
-                d['RANGE'] = ''
+                range_container = driver.find_element_by_css_selector(c["product_info"]["options"]["all_options_containers"])
+                indiv_container = range_container.find_elements_by_css_selector(c["product_info"]["options"]["individual_container"])
 
-                mpr = driver.find_element_by_class_name("c-main-product__reviews").text
+                all_options = []
+
+                """
+                Selenium are not able to get text of elements not displayed (e.g dropdowns)
+                This script clicks on all dropdowns making them visible
+                """
+                driver.execute_script("""
+                document.querySelectorAll('.multiselect__content-wrapper').forEach(el => {
+                    el.style.display = "block"
+                })
+                
+                """)
+
+                print(f"length: {len(indiv_container)}")
+                for el in indiv_container:
+                    indiv_container_title = el.find_element_by_css_selector(
+                        c["product_info"]["options"]["individual_container_title"]).text.strip()
+                    # indiv_container_options = indiv_container[i].find_element_by_css_selector(
+                    #     c["product_info"]["options"]["individual_container_items_container"))
+                    options = el.find_elements_by_css_selector(
+                        c["product_info"]["options"]["individual_container_items_container_items"]
+                    )
+                    print(f"options: {options}")
+
+                    textoptions = [a.text.strip() for a in options]
+                    print(f"options: {textoptions}")
+                    text = indiv_container_title + ': ' + ', '.join(textoptions)
+                    all_options.append(text)
+
+                d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
+
+                mpr = driver.find_element_by_css_selector(c["extras"]["rating_container"]).text
                 mpr_arr = mpr.split()
 
                 ratingc = None
@@ -172,20 +207,20 @@ class Bukalapak:
 
                 d['JUAL (UNIT TERKECIL)'] = int(soldc) if len(mpr) > 0 else ""
 
-                price = driver.find_element_by_css_selector('div.c-main-product__price').text.split('\n')
+                price = driver.find_element_by_css_selector(c["product_info"]["price"]["original"]).text.split('\n')
                 d['HARGA UNIT TERKECIL'] = float((price[0][2::]).replace(".", ""))
 
                 d['VALUE'] = ""
 
                 discount = driver.find_elements_by_css_selector(
-                    'span[class="c-main-product__price__discount-percentage"]')
+                    c["product_info"]["price"]["discount_percentage"])
                 if len(discount) > 0:
                     text_disc = discount[0].text.split()
                 d['% DISC'] = float(text_disc[-1].replace('%', '')) / 100 if len(discount) > 0 else ""
 
-                shop_category = driver.find_element_by_css_selector('div[class="c-seller__badges"]')
-                mall = len(driver.find_element_by_class_name('c-main-product__head').find_elements_by_class_name('bukamall')) > 0
-                super_seller = len(shop_category.find_elements_by_css_selector('div[class*="c-badges__new-super-seller"]')) > 0
+                shop_category = driver.find_element_by_css_selector(c["seller_info"]["category"])
+                mall = len(driver.find_elements_by_css_selector(c["extras"]["shop_category_bukamall"])) > 0
+                super_seller = len(shop_category.find_elements_by_css_selector(c["extras"]["shop_category_super_seller"])) > 0
                 cat = shop_category.text.replace('\n', '').replace(' ', '')
                 q = ['super', 'trusted']
                 if any(a in cat.casefold() for a in q) or super_seller:
@@ -206,7 +241,7 @@ class Bukalapak:
 
                 d['NAMA PRODUK E-COMMERCE'] = nama_produk
 
-                rating = driver.find_elements_by_css_selector('span[class="summary__score"]')
+                rating = driver.find_elements_by_css_selector(c["product_info"]["rating"]["rating_value"])
                 d['RATING (Khusus shopee dan toped dikali 20)'] = float(rating[0].text.strip()) if len(rating) > 0 else ""
 
                 d['JML ULASAN'] = int(ratingc) if len(mpr_arr) == 4 else ""
@@ -214,7 +249,7 @@ class Bukalapak:
                 d['DILIHAT'] = ""
 
                 d['DESKRIPSI'] = driver.find_element_by_css_selector(
-                    'div[class="c-information__description-txt"]').text
+                    c["product_info"]["description"]).text
 
                 d['TANGGAL OBSERVASI'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
