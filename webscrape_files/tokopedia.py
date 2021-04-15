@@ -230,6 +230,10 @@ class Tokopedia:
                     sold_count = sold_count.replace('rb', '')
                     sold_count = int(sold_count) * 100
 
+                elif "jt" in sold_count:
+                    sold_count = sold_count.replace('jt', '')
+                    sold_count = int(sold_count) * 100000
+
             d['JUAL (UNIT TERKECIL)'] = int(sold_count) if len(sold_count_valid) > 0 else ""
 
 
@@ -324,9 +328,11 @@ class Tokopedia:
 
             if next_button.is_enabled():
                 print("Next page")
-                next_button.click()
+                # next_button.click()
+                script = f"document.querySelector('{c['extras']['next_page_btn']}').click()"
+                driver.execute_script(script)
 
-                self.wait.until(ec.presence_of_element_located((By.CLASS_NAME,c["extras"]["search_page_data"])),
+                self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, c["extras"]["search_page_data"])),
                                 'Items not found in this page')
 
                 return self.NEXT_PAGE_EXISTS
