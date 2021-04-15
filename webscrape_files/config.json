@@ -1,42 +1,41 @@
 {
   "shopee": {
-      "seller_info": {
-          "seller_name": "div._3uf2ae",
-          "category": "div[class=\"official-shop-new-badge\"]",
-          "location": ""
+    "seller_info": {
+      "seller_name": "div._3uf2ae",
+      "category": "div[class=\"official-shop-new-badge\"]",
+      "location": ""
+    },
+    "product_info": {
+      "title": "div[class=\"attM6y\"]",
+      "rating": {
+        "rating_value": "div[class=\"OitLRu _1mYa1t\"]",
+        "rating_count": "div[class=\"OitLRu\"]"
       },
-      "product_info": {
-          "title": "div[class=\"attM6y\"]",
-          "rating": {
-              "rating_value": "div[class=\"OitLRu _1mYa1t\"]",
-              "rating_count": "div[class=\"OitLRu\"]"
-          },
-          "price": {
-              "original": "div[class=\"_3e_UQT\"]",
-              "discount_percentage": "div[class=\"_2dyNDF\"]",
-              "price_before_discount": "div[class=\"_28heec\"]"
-          },
-          "sold_count": "div[class=\"flex _210dTF\"] div[class=\"aca9MM\"]",
-          "description": "div[class=\"_3yZnxJ\"]",
-          "options": {
-              "all_options_containers": "div[class=\"flex _3AHLrn _2XdAdB\"]",
-              "individual_container": "div[class=\"flex items-center\"]",
-              "individual_container_title": "label[class=\"_2IW_UG\"]",
-              "individual_container_items_container": "div[class=\"flex items-center _2oeDUI\"]",
-              "individual_container_items_container_items": "button[class*=\"product-variation\"]"
-          }
+      "price": {
+        "original": "div[class=\"_3e_UQT\"]",
+        "discount_percentage": "div[class=\"_2dyNDF\"]",
+        "price_before_discount": "div[class=\"_28heec\"]"
       },
-      "extras": {
-          "page_is_valid": "div.page-product",
-          "product_doesnt_exist": "div[class=\"product-not-exist__content\"]",
-          "product_specs": "div[class=\"_1afiLm\"]",
-          "product_specs_child": "div[class=\"aPKXeO\"]",
-          "shop_category_container": "div[class=\"SK--cp\"]",
-          "search_page_has_results": "div[class=\"shopee-search-result-header__text\"]",
-          "search_page_data": "script[type=\"application/ld+json\"][data-rh=\"true\"]",
-
-          "next_page_btn": "button[class=\"shopee-button-outline shopee-mini-page-controller__next-btn\""
+      "sold_count": "div[class=\"flex _210dTF\"] div[class=\"aca9MM\"]",
+      "description": "div[class=\"_3yZnxJ\"]",
+      "options": {
+        "all_options_containers": "div[class=\"flex _3AHLrn _2XdAdB\"]",
+        "individual_container": "div[class=\"flex items-center\"]",
+        "individual_container_title": "label[class=\"_2IW_UG\"]",
+        "individual_container_items_container": "div[class=\"flex items-center _2oeDUI\"]",
+        "individual_container_items_container_items": "button[class*=\"product-variation\"]"
       }
+    },
+    "extras": {
+      "page_is_valid": "div.page-product",
+      "product_doesnt_exist": "div[class=\"product-not-exist__content\"]",
+      "product_specs": "div[class=\"_1afiLm\"]",
+      "product_specs_child": "div[class=\"aPKXeO\"]",
+      "shop_category_container": "div[class=\"SK--cp\"]",
+      "search_page_has_results": "div[class=\"shopee-search-result-header__text\"]",
+      "search_page_data": "script[type=\"application/ld+json\"][data-rh=\"true\"]",
+      "next_page_btn": "button[class=\"shopee-button-outline shopee-mini-page-controller__next-btn\""
+    }
   },
   "bukalapak": {
     "seller_info": {
@@ -124,7 +123,8 @@
   "template": {
     "seller_info": {
       "seller_name": "",
-      "category": ""
+      "category": "",
+      "location": ""
     },
     "product_info": {
       "title": "",
