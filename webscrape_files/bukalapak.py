@@ -160,6 +160,7 @@ class Bukalapak:
 
                 range_container = driver.find_elements_by_css_selector(c["product_info"]["options"]["all_options_containers"])
                 if (len(range_container) > 0):
+                    range_container = range_container[0]
                     indiv_container = range_container.find_elements_by_css_selector(c["product_info"]["options"]["individual_container"])
 
                     all_options = []
@@ -175,7 +176,7 @@ class Bukalapak:
                     
                     """)
 
-                    print(f"length: {len(indiv_container)}")
+                    # print(f"length: {len(indiv_container)}")
                     for el in indiv_container:
                         indiv_container_title = el.find_element_by_css_selector(
                             c["product_info"]["options"]["individual_container_title"]).text.strip()
@@ -184,10 +185,10 @@ class Bukalapak:
                         options = el.find_elements_by_css_selector(
                             c["product_info"]["options"]["individual_container_items_container_items"]
                         )
-                        print(f"options: {options}")
+                        # print(f"options: {options}")
 
                         textoptions = [a.text.strip() for a in options]
-                        print(f"options: {textoptions}")
+                        # print(f"options: {textoptions}")
                         text = indiv_container_title + ': ' + ', '.join(textoptions)
                         all_options.append(text)
 
