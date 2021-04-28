@@ -158,39 +158,42 @@ class Bukalapak:
 
                 d['BOX'] = ', '.join([item for sublist in reg for item in sublist]) if len(reg) > 0 else ""
 
-                range_container = driver.find_element_by_css_selector(c["product_info"]["options"]["all_options_containers"])
-                indiv_container = range_container.find_elements_by_css_selector(c["product_info"]["options"]["individual_container"])
+                range_container = driver.find_elements_by_css_selector(c["product_info"]["options"]["all_options_containers"])
+                if (len(range_container) > 0):
+                    indiv_container = range_container.find_elements_by_css_selector(c["product_info"]["options"]["individual_container"])
 
-                all_options = []
+                    all_options = []
 
-                """
-                Selenium are not able to get text of elements not displayed (e.g dropdowns)
-                This script clicks on all dropdowns making them visible
-                """
-                driver.execute_script("""
-                document.querySelectorAll('.multiselect__content-wrapper').forEach(el => {
-                    el.style.display = "block"
-                })
-                
-                """)
+                    """
+                    Selenium are not able to get text of elements not displayed (e.g dropdowns)
+                    This script clicks on all dropdowns making them visible
+                    """
+                    driver.execute_script("""
+                    document.querySelectorAll('.multiselect__content-wrapper').forEach(el => {
+                        el.style.display = "block"
+                    })
+                    
+                    """)
 
-                print(f"length: {len(indiv_container)}")
-                for el in indiv_container:
-                    indiv_container_title = el.find_element_by_css_selector(
-                        c["product_info"]["options"]["individual_container_title"]).text.strip()
-                    # indiv_container_options = indiv_container[i].find_element_by_css_selector(
-                    #     c["product_info"]["options"]["individual_container_items_container"))
-                    options = el.find_elements_by_css_selector(
-                        c["product_info"]["options"]["individual_container_items_container_items"]
-                    )
-                    print(f"options: {options}")
+                    print(f"length: {len(indiv_container)}")
+                    for el in indiv_container:
+                        indiv_container_title = el.find_element_by_css_selector(
+                            c["product_info"]["options"]["individual_container_title"]).text.strip()
+                        # indiv_container_options = indiv_container[i].find_element_by_css_selector(
+                        #     c["product_info"]["options"]["individual_container_items_container"))
+                        options = el.find_elements_by_css_selector(
+                            c["product_info"]["options"]["individual_container_items_container_items"]
+                        )
+                        print(f"options: {options}")
 
-                    textoptions = [a.text.strip() for a in options]
-                    print(f"options: {textoptions}")
-                    text = indiv_container_title + ': ' + ', '.join(textoptions)
-                    all_options.append(text)
+                        textoptions = [a.text.strip() for a in options]
+                        print(f"options: {textoptions}")
+                        text = indiv_container_title + ': ' + ', '.join(textoptions)
+                        all_options.append(text)
 
-                d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
+                    d['RANGE'] = '; '.join(all_options) if len(all_options) > 0 else ""
+                else:
+                    d['RANGE'] = ""
 
                 mpr = driver.find_element_by_css_selector(c["extras"]["rating_container"]).text
                 mpr_arr = mpr.split()
